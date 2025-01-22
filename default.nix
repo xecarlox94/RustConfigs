@@ -4,6 +4,5 @@ with pkgs;
     buildInputs = [
       cargo
       rust-analyzer
-      lunarvim
     ];
   }
