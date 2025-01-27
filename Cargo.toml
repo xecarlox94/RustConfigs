@@ -1,5 +1,5 @@
 [package]
-name = "Rust_configs"
+name = "rust-configs"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,4 +7,4 @@ edition = "2021"
 clap = "4.5.27"
 ratatui = "0.29.0"
 crossterm = "0.28.1"
-bollard = "0.18.1"
+rustversion = "1.0.19"
