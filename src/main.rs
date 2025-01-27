@@ -54,7 +54,14 @@ fn main() {
             let mut terminal  = ratatui::init();
             let app_result = App::default().run(&mut terminal);
 
-            ratatui::restore();
+            // https://ratatui.rs/tutorials/counter-app/error-handling/
+
+            if let Err(err) = ratatui::restore() {
+                eprintln!(
+                    "failed to restore terminal. Run `reset` or restart your terminal to recover: {}",
+                    err
+                );
+            }
 
             app_result.expect("something wrong")
         }

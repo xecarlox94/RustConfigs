@@ -4,8 +4,8 @@ with pkgs;
     buildInputs = [
       cargo
       rustc
-      rust-analyzer
-      lunarvim
+      vim
       git
+      coreutils
     ];
   }
