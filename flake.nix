@@ -18,8 +18,10 @@
           };
         in rec {
           packages = {
-
+            # https://www.tweag.io/blog/2022-09-22-rust-nix/
           };
+
+          # https://github.com/oxalica/rust-overlay
 
           devShells.default = with pkgs; mkShell {
             buildInputs = [
