@@ -1,24 +1,43 @@
-
-
-
-
 use std::env;
+use std::fs;
 
+
+struct DockerOptions {
+    x11_support: bool,
+    nvidia_runtime: bool,
+    is_debian_based: bool,
+}
+
+struct NewDockerProject {
+    name: String,
+    docker_base_name: String,
+    docker_options: DockerOptions,
+}
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
 
-
     let path = env::current_dir()?;
-
     let path_str: String = path.display().to_string();
-
     println!("current path: {path_str}");
+
+    let new_docker_project: NewDockerProject = get_new_docker_project();
 
     Ok(())
 }
 
+fn get_new_docker_project() -> NewDockerProject {
 
-
+    NewDockerProject {
+        name: String::from("sf"),
+        docker_base_name: String::from("ubuntu"),
+        docker_options:
+            DockerOptions {
+                x11_support: true,
+                nvidia_runtime: true,
+                is_debian_based: true,
+            }
+    }
+}
 
 // Requirements docker bootstrap
 //
