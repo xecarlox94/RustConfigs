@@ -1,38 +1,36 @@
-
 {
-  description = "Rust workspace";
+  description = "A devShell example";
 
   inputs = {
+    nixpkgs.url      = "github:NixOS/nixpkgs/nixos-unstable";
     rust-overlay.url = "github:oxalica/rust-overlay";
-    flake-utils.follows = "rust-overlay/flake-utils";
-    nixpkgs.follows = "rust-overlay/nixpkgs";
+    flake-utils.url  = "github:numtide/flake-utils";
   };
 
-  outputs = inputs: 
-    with inputs; flake-utils.lib.eachDefaultSystem (
-      system:
-        let
-          pkgs = nixpkgs.legacyPackages.${system};
-          code = pkgs.callPackage ./. {
-            inherit nixpkgs system rust-overlay;
-          };
-        in rec {
-          packages = {
-            # https://www.tweag.io/blog/2022-09-22-rust-nix/
-          };
-
-          # https://github.com/oxalica/rust-overlay
-
-          devShells.default = with pkgs; mkShell {
-            buildInputs = [
-              openssl
-              pkg-config
-              eza
-              fd
-              rust-bin.beta.latest.default
-            ];
-
-          };
+  outputs = { self, nixpkgs, rust-overlay, flake-utils, ... }:
+    flake-utils.lib.eachDefaultSystem (system:
+      let
+        overlays = [ (import rust-overlay) ];
+        pkgs = import nixpkgs {
+          inherit system overlays;
         };
+      in
+      with pkgs;
+      {
+        devShells.default = mkShell {
+          buildInputs = [
+            openssl
+            pkg-config
+            fd
+            rust-analyzer
+            rust-bin.beta.latest.default
+          ];
+
+          shellHook = ''
+            alias find=fd
+          '';
+        };
+      }
     );
 }
+
