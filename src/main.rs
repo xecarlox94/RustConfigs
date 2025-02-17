@@ -1,14 +1,20 @@
 use std::{
     env, 
-    fs,
-    io,
+    fs::{
+        self,
+        File,
+    },
+    io::{
+        self,
+        Write,
+    },
     path::PathBuf
 };
 
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
 
-    let mut path: PathBuf = env::current_dir()?;
+    let mut curr_path: PathBuf = env::current_dir()?;
 
 
     let project_name: String = "sf".to_string();
@@ -26,9 +32,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             is_debian_based
         );
 
-    new_docker_project.bootstrap_docker_project(&mut path);
+    println!("\n\nDOCKER FILE\n\n");
+    println!("{}", new_docker_project.get_dockerfile());
 
-    println!("RAN CODE!");
+    println!("\n\nDOCKER RUN\n\n");
+    println!("{}", new_docker_project.get_docker_buildrun_file());
+
+    println!("\n\nDOCKER bootstrap\n\n");
+    new_docker_project.bootstrap_docker_project(&mut curr_path)?;
 
     Ok(())
 }
@@ -43,6 +54,7 @@ struct DockerOptions {
 
 struct NewDockerProject {
     name: String,
+    // curr_dir: String,
     docker_base_name: String,
     docker_options: DockerOptions,
 }
@@ -70,15 +82,78 @@ impl NewDockerProject {
         }
     }
 
+    fn get_docker_buildrun_file(&self) -> String {
+        format!(r#"
+clear &&
+    docker_build.sh &&
+    docker_run.sh
+        "
+            bash 
+        "
+        "
+            -v '${{PWD}}/src':/src
+            --rm 
+            --privileged 
+            --name $PROJECT_FOLDER 
+        "
+        $ADD_OPTS
+        "#)
+    }
+
+
+    fn get_dockerfile(&self) -> String {
+        format!(
+            "FROM {}\n{}\nWORKDIR /src\n\n",
+            self.docker_base_name, 
+            if self.docker_options.is_debian_based 
+            {
+                "ARG DEBIAN_FRONTEND=noninteractive"
+            } 
+            else { "" }
+        )
+    }
+
+    // fn create_exec_and_run(&self) -> String {
+        // touch_x run file
+            // paste content run file
+            // run file
+    // }
+    //}
+
     fn bootstrap_docker_project(&self, current_dir: &mut PathBuf) -> Result<(), io::Error> {
 
+        println!("RUNNING BOOTSTRAP");
+
         current_dir.push("new_dir");
+
+        let curr_dir: String = current_dir.display().to_string();
+
+        let mut src_dir = current_dir.clone();
+        src_dir.push("src");
 
         //let curr_path_string: String = current_dir.display().to_string();
 
         let curr_dir_str: String = current_dir.display().to_string();
 
-        fs::create_dir(current_dir)?;
+        fs::remove_dir_all(curr_dir.clone())?;
+
+        fs::create_dir(&curr_dir)?;
+
+        fs::create_dir(&src_dir)?;
+
+
+        let docker_file_path = {
+            let mut file_dir = current_dir.clone();
+            file_dir.push("Dockerfile");
+            file_dir
+        };
+
+        let mut docker_file = File::create(docker_file_path)?;
+
+        docker_file.write_all(
+            self.get_dockerfile().as_bytes()
+        )?;
+
 
         println!("CURRENT_DIR: {curr_dir_str}");
 
@@ -87,6 +162,32 @@ impl NewDockerProject {
 
 }
 
+    /*
+
+    echo "sudo to create run.sh executable file"
+    touch_x run.sh
+
+
+    mkdir src
+
+
+    echo -e "clear &&\\
+        docker_build.sh &&\\
+        docker_run.sh \\
+            \"\\
+                bash \\
+            \"\\
+            \"\\
+                -v '\${PWD}/src':/src \\
+                --rm \\
+                --privileged \\
+                --name $PROJECT_FOLDER \\
+            \"\\
+            $ADD_OPTS" > run.sh
+
+
+    ./run.sh
+    */
 
 
 // Requirements docker bootstrap
