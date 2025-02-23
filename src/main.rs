@@ -1,12 +1,9 @@
-use std::{
-    env,
-    path::PathBuf,
-};
+use std::env;
 
 
 fn main() -> Result<(), Box<dyn std::error::Error>>{
 
-    let mut curr_path: PathBuf = env::current_dir()?;
+    let curr_path = env::current_dir()?;
 
     let new_docker_project =
         rust_configs::
@@ -18,21 +15,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>>{
                 true,
             );
 
-    println!(
-        "\n\nDOCKER FILE\n\n{}",
-        new_docker_project.get_dockerfile()
-    );
-
-    println!(
-        "\n\nDOCKER RUN\n\n{}",
-        new_docker_project.get_docker_buildrun_file()
-    );
-
-    println!(
-        "\n\nDOCKER bootstrap\n\n"
-    );
-
-    new_docker_project.bootstrap_docker_project(&mut curr_path)?;
+    new_docker_project.bootstrap_docker_project(curr_path)?;
 
     Ok(())
 }

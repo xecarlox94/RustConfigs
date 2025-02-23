@@ -10,21 +10,6 @@ use std::{
     path::PathBuf
 };
 
-
-
-pub struct DockerOptions {
-    x11_support: bool,
-    nvidia_runtime: bool,
-    is_debian_based: bool,
-}
-
-pub struct NewDockerProject {
-    name: String,
-    // curr_dir: String,
-    docker_base_name: String,
-    docker_options: DockerOptions,
-}
-
 impl NewDockerProject {
 
     pub fn new(
@@ -32,9 +17,10 @@ impl NewDockerProject {
         docker_base_name: String,
         x11_support: bool,
         nvidia_runtime: bool,
-        is_debian_based: bool
+        is_debian_based: bool,
     )
-    -> NewDockerProject {
+    -> NewDockerProject
+    {
 
         NewDockerProject {
             name: project_name,
@@ -48,47 +34,12 @@ impl NewDockerProject {
         }
     }
 
-    pub fn get_docker_buildrun_file(&self) -> String {
-        format!(r#"
-clear &&
-    docker_build.sh &&
-    docker_run.sh
-        "
-            bash
-        "
-        "
-            -v '${{PWD}}/src':/src
-            --rm
-            --privileged
-            --name $PROJECT_FOLDER
-        "
-        $ADD_OPTS
-        "#)
-    }
+
+    pub fn bootstrap_docker_project(self, curr_dir: PathBuf) -> Result<(), io::Error> {
 
 
-    pub fn get_dockerfile(&self) -> String {
-        format!(
-            "FROM {}\n{}\nWORKDIR /src\n\n",
-            self.docker_base_name,
-            if self.docker_options.is_debian_based
-            {
-                "ARG DEBIAN_FRONTEND=noninteractive"
-            }
-            else { "" }
-        )
-    }
-
-    // fn create_exec_and_run(&self) -> String {
-        // touch_x run file
-            // paste content run file
-            // run file
-    // }
-    //}
-
-    pub fn bootstrap_docker_project(&self, current_dir: &mut PathBuf) -> Result<(), io::Error> {
-
-        println!("RUNNING BOOTSTRAP");
+        eprintln!("change this current dir to an immutable directory, use pointers!!!!");
+        let mut current_dir = curr_dir.clone();
 
         current_dir.push("new_dir");
 
@@ -101,7 +52,9 @@ clear &&
 
         let curr_dir_str: String = current_dir.display().to_string();
 
-        fs::remove_dir_all(curr_dir.clone())?;
+
+        eprintln!("remove bootstraping directory if exists");
+        // fs::remove_dir_all(curr_dir.clone())?;
 
         fs::create_dir(&curr_dir)?;
 
@@ -121,12 +74,69 @@ clear &&
         )?;
 
 
+        println!(
+            "\n\nDOCKER RUN\n\n{}",
+            self.get_docker_build_and_runfile()
+        );
+
+        // fn create_exec_and_run(&self) -> String {
+            // touch_x run file
+                // paste content run file
+                // run file
+        // }
+        //}
+
         println!("CURRENT_DIR: {curr_dir_str}");
 
         Ok(())
     }
 
+    fn get_docker_build_and_runfile(&self) -> String {
+        format!(r#"
+clear &&
+    docker_build.sh &&
+    docker_run.sh
+        "
+            bash
+        "
+        "
+            -v '${{PWD}}/src':/src
+            --rm
+            --privileged
+            --name $PROJECT_FOLDER
+        "
+        $ADD_OPTS
+        "#)
+    }
+
+    fn get_dockerfile(&self) -> String {
+        format!(
+            "FROM {}\n{}\nWORKDIR /src\n\n",
+            self.docker_base_name,
+            if self.docker_options.is_debian_based
+            {
+                "ARG DEBIAN_FRONTEND=noninteractive"
+            }
+            else { "" }
+        )
+    }
+
 }
+
+
+struct DockerOptions {
+    x11_support: bool,
+    nvidia_runtime: bool,
+    is_debian_based: bool,
+}
+
+pub struct NewDockerProject {
+    name: String,
+    // curr_dir: String,
+    docker_base_name: String,
+    docker_options: DockerOptions,
+}
+
 
     /*
 
