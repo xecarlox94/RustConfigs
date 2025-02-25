@@ -1,13 +1,11 @@
 use std::{
-    fs::{
+    env::current_dir, fs::{
         self,
         File,
-    },
-    io::{
+    }, io::{
         self,
         Write,
-    },
-    path::PathBuf
+    }, path::PathBuf
 };
 
 impl NewDockerProject {
@@ -32,63 +30,6 @@ impl NewDockerProject {
                     is_debian_based,
                 }
         }
-    }
-
-
-    pub fn bootstrap_docker_project(self, curr_dir: PathBuf) -> Result<(), io::Error> {
-
-
-        eprintln!("change this current dir to an immutable directory, use pointers!!!!");
-        let mut current_dir = curr_dir.clone();
-
-        current_dir.push("new_dir");
-
-        let curr_dir: String = current_dir.display().to_string();
-
-        let mut src_dir = current_dir.clone();
-        src_dir.push("src");
-
-        //let curr_path_string: String = current_dir.display().to_string();
-
-        let curr_dir_str: String = current_dir.display().to_string();
-
-
-        eprintln!("remove bootstraping directory if exists");
-        // fs::remove_dir_all(curr_dir.clone())?;
-
-        fs::create_dir(&curr_dir)?;
-
-        fs::create_dir(&src_dir)?;
-
-
-        let docker_file_path = {
-            let mut file_dir = current_dir.clone();
-            file_dir.push("Dockerfile");
-            file_dir
-        };
-
-        let mut docker_file = File::create(docker_file_path)?;
-
-        docker_file.write_all(
-            self.get_dockerfile().as_bytes()
-        )?;
-
-
-        println!(
-            "\n\nDOCKER RUN\n\n{}",
-            self.get_docker_build_and_runfile()
-        );
-
-        // fn create_exec_and_run(&self) -> String {
-            // touch_x run file
-                // paste content run file
-                // run file
-        // }
-        //}
-
-        println!("CURRENT_DIR: {curr_dir_str}");
-
-        Ok(())
     }
 
     fn get_docker_build_and_runfile(&self) -> String {
@@ -121,7 +62,160 @@ clear &&
         )
     }
 
+    pub fn bootstrap_docker_project(self, curr_dir: PathBuf) -> Result<(), io::Error> {
+
+
+        eprintln!("change this current dir to an immutable directory, use pointers!!!!");
+        let mut current_dir = curr_dir.clone();
+        current_dir.push("new_dir");
+
+        match fs::exists(&current_dir) {
+            Ok(true) => fs::remove_dir_all(current_dir.clone())?,
+            Ok(false) => (),
+            Err(err) => return Err(err),
+        };
+
+        let curr_dir: String = current_dir.display().to_string();
+
+        let mut src_dir = current_dir.clone();
+        src_dir.push("src");
+
+        //let curr_path_string: String = current_dir.display().to_string();
+
+        let curr_dir_str: String = current_dir.display().to_string();
+
+        fs::create_dir(&curr_dir)?;
+        fs::create_dir(&src_dir)?;
+
+
+        let docker_file_path = {
+            let mut file_dir = current_dir.clone();
+            file_dir.push("Dockerfile");
+            file_dir
+        };
+
+        let mut docker_file = File::create(docker_file_path)?;
+
+        docker_file.write_all(
+            self.get_dockerfile().as_bytes()
+        )?;
+
+
+        println!(
+            "\n\nDOCKER RUN\n\n{}",
+            self.get_docker_build_and_runfile()
+        );
+
+        // fn create_exec_and_run(&self) -> String {
+            // touch_x run file
+                // paste content run file
+                // run file
+        // }
+        //}
+
+        println!("CURRENT_DIR: {curr_dir_str}");
+
+        let _ = ProjectDirectory(
+            curr_dir.clone(),
+            Directory(
+                "another_dir".to_string(), 
+                Some(Box::new(vec![
+                    PrjFile::DirFile(CodeFile("run.sh".to_string(), "top run fileeeee".to_string())),
+                    PrjFile::DirFile(CodeFile("Dockerfile".to_string(), "dockerfileeeee".to_string())),
+                    PrjFile::Dir(Directory(
+                        "shell_utils".to_string(),
+                        Some(Box::new(vec![
+                            PrjFile::DirFile(CodeFile("build_docker.sh".to_string(), "docker build util".to_string())),
+                            PrjFile::DirFile(CodeFile("run_docker.sh".to_string(), "docker run util".to_string())),
+                        ]))
+                    )),
+                    PrjFile::Dir(Directory(
+                        "src".to_string(),
+                        Some(Box::new(vec![
+                            PrjFile::DirFile(CodeFile("hello.sh".to_string(), "echo \"Hello World\"".to_string())),
+                        ]))
+                    ))
+                ]))
+            )
+        );
+
+        Ok(())
+    }
+
 }
+
+
+fn createProjectDirectory(prjDirectory: ProjectDirectory) -> () 
+{
+    let ProjectDirectory(current_path, directory) = prjDirectory;
+
+    createDirectory(directory, current_path)
+}
+
+fn createDirectory(dir: Directory, curr_folder: PathBuf) -> () 
+{
+    let Directory(dir_name, maybe_dir_contents) = dir;
+
+    let mut new_dir = curr_dir.clone();
+    new_dir.push(dir_name);
+
+    maybe_dir_contents.map_or(
+        (),
+        |dcontents: Vec<PrjFile>| -> () {
+            dcontents
+                .into_iter()
+                .map(
+                    |prfFile: PfjFile| {
+                        createFileBlob(new_dir.clone(), prfFile)
+                    }
+                )
+        }
+    )
+}
+
+fn createFileBlob(current_dir: PathBuf, pfjFile: PfjFile) -> () {
+    match pfjFile {
+        Dir(directory) => current_dir(current_dir, directory),
+        DirFile(codeFile) => createFile(current_dir, codeFile),
+    }
+}
+
+fn createFile(current_dir: PathBuf, codeFile: CodeFile) -> () {
+    // todo!("yet to finish this function")
+    ()
+}
+
+
+struct ProjectDirectory(PathBuf, Directory);
+
+enum PrjFile {
+    Dir(Directory),
+    DirFile(CodeFile),
+}
+
+type Content = String;
+struct CodeFile(String, Content);
+
+struct Directory(
+    String,
+    Option<
+        Box<
+            Vec<PrjFile>
+        >
+    >
+);
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 struct DockerOptions {
