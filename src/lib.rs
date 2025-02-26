@@ -106,16 +106,17 @@ fn create_project_directory(prj_directory: ProjectDirectory) -> Result<(), io::E
 
     let ProjectDirectory(current_path, directory) = prj_directory;
 
+    // let mut dir_to_be_created = current_path.clone();
+    // let Directory(name_dir, _) = directory.clone();
+    // dir_to_be_created.push(name_dir);
 
-    match fs::exists(&current_path) {
-        Ok(true) => fs::remove_dir_all(current_path.clone())?,
-        Ok(false) => (),
-        Err(err) => return Err(err),
-    };
+    // match fs::exists(&dir_to_be_created) {
+        // Ok(true) => fs::remove_dir_all(dir_to_be_created.clone())?,
+        // Ok(false) => (),
+        // Err(err) => return Err(err),
+    // };
 
-    Ok(
-        create_directory(current_path, directory)
-    )
+    Ok(create_directory(current_path, directory))
 }
 
 fn create_directory(curr_folder: PathBuf, dir: Directory) -> () 
@@ -127,13 +128,16 @@ fn create_directory(curr_folder: PathBuf, dir: Directory) -> ()
 
     let _ = fs::create_dir(&new_dir);
 
-    maybe_dir_contents.map_or(
+    println!("running");
+    maybe_dir_contents
+        .map_or(
         (),
         |dcontents: Box<Vec<PrjFile>>| -> () {
             let _ =dcontents
                 .into_iter()
                 .map(
                     |prf_file: PrjFile| {
+                        println!("creating file blobs");
                         create_file_blob(new_dir.clone(), prf_file)
                     }
                 );
