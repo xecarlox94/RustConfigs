@@ -1,11 +1,13 @@
 use std::{
-    env::current_dir, fs::{
+    fs::{
         self,
         File,
-    }, io::{
+    }, 
+    io::{
         self,
         Write,
-    }, path::PathBuf
+    }, 
+    path::PathBuf
 };
 
 impl NewDockerProject {
@@ -65,58 +67,8 @@ clear &&
     pub fn bootstrap_docker_project(self, curr_dir: PathBuf) -> Result<(), io::Error> {
 
 
-        eprintln!("change this current dir to an immutable directory, use pointers!!!!");
-        let mut current_dir = curr_dir.clone();
-        current_dir.push("new_dir");
-
-        match fs::exists(&current_dir) {
-            Ok(true) => fs::remove_dir_all(current_dir.clone())?,
-            Ok(false) => (),
-            Err(err) => return Err(err),
-        };
-
-        let curr_dir: String = current_dir.display().to_string();
-
-        let mut src_dir = current_dir.clone();
-        src_dir.push("src");
-
-        //let curr_path_string: String = current_dir.display().to_string();
-
-        let curr_dir_str: String = current_dir.display().to_string();
-
-        fs::create_dir(&curr_dir)?;
-        fs::create_dir(&src_dir)?;
-
-
-        let docker_file_path = {
-            let mut file_dir = current_dir.clone();
-            file_dir.push("Dockerfile");
-            file_dir
-        };
-
-        let mut docker_file = File::create(docker_file_path)?;
-
-        docker_file.write_all(
-            self.get_dockerfile().as_bytes()
-        )?;
-
-
-        println!(
-            "\n\nDOCKER RUN\n\n{}",
-            self.get_docker_build_and_runfile()
-        );
-
-        // fn create_exec_and_run(&self) -> String {
-            // touch_x run file
-                // paste content run file
-                // run file
-        // }
-        //}
-
-        println!("CURRENT_DIR: {curr_dir_str}");
-
-        let _ = ProjectDirectory(
-            curr_dir.clone(),
+        let prj_dir = ProjectDirectory(
+            curr_dir,
             Directory(
                 "another_dir".to_string(), 
                 Some(Box::new(vec![
@@ -139,50 +91,82 @@ clear &&
             )
         );
 
+        create_project_directory(prj_dir)?;
+
         Ok(())
     }
 
 }
 
 
-fn createProjectDirectory(prjDirectory: ProjectDirectory) -> () 
+fn create_project_directory(prj_directory: ProjectDirectory) -> Result<(), io::Error>
 {
-    let ProjectDirectory(current_path, directory) = prjDirectory;
 
-    createDirectory(directory, current_path)
+    eprintln!("change this current dir to an immutable directory, use pointers!!!!");
+
+    let ProjectDirectory(current_path, directory) = prj_directory;
+
+
+    match fs::exists(&current_path) {
+        Ok(true) => fs::remove_dir_all(current_path.clone())?,
+        Ok(false) => (),
+        Err(err) => return Err(err),
+    };
+
+    Ok(
+        create_directory(current_path, directory)
+    )
 }
 
-fn createDirectory(dir: Directory, curr_folder: PathBuf) -> () 
+fn create_directory(curr_folder: PathBuf, dir: Directory) -> () 
 {
     let Directory(dir_name, maybe_dir_contents) = dir;
 
-    let mut new_dir = curr_dir.clone();
+    let mut new_dir = curr_folder.clone();
     new_dir.push(dir_name);
+
+    let _ = fs::create_dir(&new_dir);
 
     maybe_dir_contents.map_or(
         (),
-        |dcontents: Vec<PrjFile>| -> () {
-            dcontents
+        |dcontents: Box<Vec<PrjFile>>| -> () {
+            let _ =dcontents
                 .into_iter()
                 .map(
-                    |prfFile: PfjFile| {
-                        createFileBlob(new_dir.clone(), prfFile)
+                    |prf_file: PrjFile| {
+                        create_file_blob(new_dir.clone(), prf_file)
                     }
-                )
+                );
         }
     )
 }
 
-fn createFileBlob(current_dir: PathBuf, pfjFile: PfjFile) -> () {
-    match pfjFile {
-        Dir(directory) => current_dir(current_dir, directory),
-        DirFile(codeFile) => createFile(current_dir, codeFile),
+fn create_file_blob(current_dir: PathBuf, prj_file: PrjFile) -> () {
+    match prj_file {
+        PrjFile::Dir(directory) => create_directory(current_dir, directory),
+        PrjFile::DirFile(code_file) => create_file(current_dir, code_file),
     }
 }
 
-fn createFile(current_dir: PathBuf, codeFile: CodeFile) -> () {
-    // todo!("yet to finish this function")
-    ()
+fn create_file(current_dir: PathBuf, code_file: CodeFile) -> () {
+
+    let CodeFile(file_name, content) = code_file;
+
+    let docker_file_path = {
+        let mut file_dir = current_dir.clone();
+        file_dir.push(file_name);
+        file_dir
+    };
+
+    match File::create(docker_file_path) {
+        Ok(mut docker_file) => {
+            let _ = docker_file.write_all(
+                content.as_bytes()
+            );
+        },
+        Err(_) => (),
+    };
+
 }
 
 
