@@ -2,12 +2,10 @@ use std::{
     fs::{
         self,
         File,
-    }, 
-    io::{
+    }, io::{
         self,
         Write,
-    }, 
-    path::PathBuf
+    }, path::PathBuf
 };
 
 impl NewDockerProject {
@@ -19,7 +17,7 @@ impl NewDockerProject {
         nvidia_runtime: bool,
         is_debian_based: bool,
     )
-    -> NewDockerProject
+    -> Self
     {
 
         NewDockerProject {
@@ -67,10 +65,10 @@ clear &&
     pub fn bootstrap_docker_project(self, curr_dir: PathBuf) -> Result<(), io::Error> {
 
 
-        let prj_dir = ProjectDirectory(
+        let _ = ProjectDirectory(
             curr_dir,
             Directory(
-                "another_dir".to_string(), 
+                "another_dir".to_string(),
                 Some(Box::new(vec![
                     PrjFile::DirFile(CodeFile("run.sh".to_string(), "top run fileeeee".to_string())),
                     PrjFile::DirFile(CodeFile("Dockerfile".to_string(), "dockerfileeeee".to_string())),
@@ -89,9 +87,7 @@ clear &&
                     ))
                 ]))
             )
-        );
-
-        create_project_directory(prj_dir)?;
+        ).create_project_directory()?;
 
         Ok(())
     }
@@ -99,90 +95,51 @@ clear &&
 }
 
 
-fn create_project_directory(prj_directory: ProjectDirectory) -> Result<(), io::Error>
-{
 
-    eprintln!("change this current dir to an immutable directory, use pointers!!!!");
-
-    let ProjectDirectory(current_path, directory) = prj_directory;
-
-    // let mut dir_to_be_created = current_path.clone();
-    // let Directory(name_dir, _) = directory.clone();
-    // dir_to_be_created.push(name_dir);
-
-    // match fs::exists(&dir_to_be_created) {
-        // Ok(true) => fs::remove_dir_all(dir_to_be_created.clone())?,
-        // Ok(false) => (),
-        // Err(err) => return Err(err),
-    // };
-
-    Ok(create_directory(current_path, directory))
-}
-
-fn create_directory(curr_folder: PathBuf, dir: Directory) -> () 
-{
-    let Directory(dir_name, maybe_dir_contents) = dir;
-
-    let mut new_dir = curr_folder.clone();
-    new_dir.push(dir_name);
-
-    let _ = fs::create_dir(&new_dir);
-
-    println!("running");
-    maybe_dir_contents
-        .map_or(
-        (),
-        |dcontents: Box<Vec<PrjFile>>| -> () {
-            let _ =dcontents
-                .into_iter()
-                .map(
-                    |prf_file: PrjFile| {
-                        println!("creating file blobs");
-                        create_file_blob(new_dir.clone(), prf_file)
-                    }
-                );
-        }
-    )
-}
-
-fn create_file_blob(current_dir: PathBuf, prj_file: PrjFile) -> () {
-    match prj_file {
-        PrjFile::Dir(directory) => create_directory(current_dir, directory),
-        PrjFile::DirFile(code_file) => create_file(current_dir, code_file),
-    }
-}
-
-fn create_file(current_dir: PathBuf, code_file: CodeFile) -> () {
-
-    let CodeFile(file_name, content) = code_file;
-
-    let docker_file_path = {
-        let mut file_dir = current_dir.clone();
-        file_dir.push(file_name);
-        file_dir
-    };
-
-    match File::create(docker_file_path) {
-        Ok(mut docker_file) => {
-            let _ = docker_file.write_all(
-                content.as_bytes()
-            );
-        },
-        Err(_) => (),
-    };
-
-}
-
-
-struct ProjectDirectory(PathBuf, Directory);
 
 enum PrjFile {
     Dir(Directory),
     DirFile(CodeFile),
 }
 
+impl PrjFile {
+
+    fn create_file_blob(self, current_dir: PathBuf) -> () {
+        match self {
+            PrjFile::Dir(directory) => directory.create_directory(current_dir),
+            PrjFile::DirFile(code_file) => code_file.create_file(current_dir),
+        }
+    }
+}
+
+
 type Content = String;
 struct CodeFile(String, Content);
+
+impl CodeFile {
+
+    fn create_file(self, current_dir: PathBuf) -> () {
+
+        let CodeFile(file_name, content) = self;
+
+        let docker_file_path = {
+            let mut file_dir = current_dir.clone();
+            file_dir.push(file_name);
+            file_dir
+        };
+
+        match File::create(docker_file_path) {
+            Ok(mut docker_file) => {
+                let _ = docker_file.write_all(
+                    content.as_bytes()
+                );
+            },
+            Err(_) => (),
+        };
+
+    }
+}
+
 
 struct Directory(
     String,
@@ -193,6 +150,74 @@ struct Directory(
     >
 );
 
+impl Directory {
+
+
+    fn create_directory(self, curr_folder: PathBuf) -> ()
+    {
+        let Directory(dir_name, maybe_box_dir_contents) = self;
+
+        let mut new_dir = curr_folder.clone();
+        new_dir.push(dir_name);
+
+        let _ = fs::create_dir(&new_dir);
+
+        println!("running");
+
+        match maybe_box_dir_contents {
+            Some(box_dir_contents) => {
+
+                println!("running");
+
+                let prjFiles : Vec<PrjFile> = *box_dir_contents;
+
+                let _ = prjFiles
+                    .into_iter()
+                    .map(
+                        |prf_file: PrjFile| {
+
+                            println!("creating file blobs");
+                            prf_file.create_file_blob(new_dir.clone());
+                        }
+                    )
+                    .collect::<Vec<_>>();
+            },
+            None => (),
+        }
+    }
+    
+}
+
+
+
+
+
+
+struct ProjectDirectory(PathBuf, Directory);
+
+impl ProjectDirectory {
+
+    fn create_project_directory(self) -> Result<(), io::Error>
+    {
+
+        eprintln!("change this current dir to an immutable directory, use pointers!!!!");
+
+        let ProjectDirectory(current_path, directory) = self;
+
+        // let mut dir_to_be_created = current_path.clone();
+        // let Directory(name_dir, _) = directory.clone();
+        // dir_to_be_created.push(name_dir);
+
+        // match fs::exists(&dir_to_be_created) {
+            // Ok(true) => fs::remove_dir_all(dir_to_be_created.clone())?,
+            // Ok(false) => (),
+            // Err(err) => return Err(err),
+        // };
+
+        Ok(directory.create_directory(current_path))
+    }
+
+}
 
 
 
