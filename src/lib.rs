@@ -87,7 +87,8 @@ clear &&
                     ))
                 ]))
             )
-        ).create_project_directory()?;
+        )
+            .build()?;
 
         Ok(())
     }
@@ -114,7 +115,10 @@ impl PrjFile {
 
 
 type Content = String;
-struct CodeFile(String, Content);
+type NameBlob = String;
+
+struct CodeFile(NameBlob, Content);
+
 
 impl CodeFile {
 
@@ -142,7 +146,7 @@ impl CodeFile {
 
 
 struct Directory(
-    String,
+    NameBlob,
     Option<
         Box<
             Vec<PrjFile>
@@ -162,12 +166,8 @@ impl Directory {
 
         let _ = fs::create_dir(&new_dir);
 
-        println!("running");
-
         match maybe_box_dir_contents {
             Some(box_dir_contents) => {
-
-                println!("running");
 
                 let prjFiles : Vec<PrjFile> = *box_dir_contents;
 
@@ -185,7 +185,16 @@ impl Directory {
             None => (),
         }
     }
-    
+
+    fn get_dirname_str(&self) -> String {
+
+        let Directory(dir_name, _): &Directory = self;
+
+        dir_name.to_string()
+
+    }
+
+
 }
 
 
@@ -197,24 +206,30 @@ struct ProjectDirectory(PathBuf, Directory);
 
 impl ProjectDirectory {
 
-    fn create_project_directory(self) -> Result<(), io::Error>
+    fn build(self) -> Result<(), io::Error>
     {
 
         eprintln!("change this current dir to an immutable directory, use pointers!!!!");
 
         let ProjectDirectory(current_path, directory) = self;
 
-        // let mut dir_to_be_created = current_path.clone();
-        // let Directory(name_dir, _) = directory.clone();
-        // dir_to_be_created.push(name_dir);
+        let mut dir_to_be_created = current_path.clone();
 
-        // match fs::exists(&dir_to_be_created) {
-            // Ok(true) => fs::remove_dir_all(dir_to_be_created.clone())?,
-            // Ok(false) => (),
-            // Err(err) => return Err(err),
-        // };
+        dir_to_be_created.push(directory.get_dirname_str());
 
-        Ok(directory.create_directory(current_path))
+
+        match fs::exists(&dir_to_be_created) {
+
+            Err(err) => return Err(err),
+
+            Ok(true) => fs::remove_dir_all(dir_to_be_created.clone())?,
+
+            Ok(false) => (),
+        };
+
+        Ok(
+            directory.create_directory(current_path)
+        )
     }
 
 }
