@@ -105,19 +105,28 @@ impl NewDockerProject {
         CodeFile(
             "run.sh".to_string(),
             format!(r#"
-clear &&
-    docker_build.sh &&
-    docker_run.sh
-        "
-            bash
-        "
-        "
-            -v '${{PWD}}/src':/src
-            --rm
-            --privileged
-            --name $PROJECT_FOLDER
-        "
-        $ADD_OPTS
+
+source shell_utils/build_docker.sh
+source shell_utils/run_docker.sh
+
+hello_world_build_docker
+
+hello_world_run_docker
+
+
+\\ clear &&
+    \\ docker_build.sh &&
+    \\ docker_run.sh
+        \\ "
+            \\ bash
+        \\ "
+        \\ "
+            \\ -v '${{PWD}}/src':/src
+            \\ --rm
+            \\ --privileged
+            \\ --name $PROJECT_FOLDER
+        \\ "
+        \\ $ADD_OPTS
             "#)
         )
     }
@@ -126,9 +135,9 @@ clear &&
         CodeFile(
             "build_docker.sh".to_string(), 
             r#"
-docker build util
-
-hello there!!!!!
+hello_world_build_docker () {
+   echo 'hello, world! from build docker!'
+}
             "#.to_string()
         )
     }
@@ -137,10 +146,9 @@ hello there!!!!!
         CodeFile(
             "run_docker.sh".to_string(), 
             r#"
-docker run util
-
-
-Hi there!!!!!!!!!!!!!!!!!!
+hello_world_run_docker () {
+   echo 'hello, world! from run docker!'
+}
             "#.to_string()
         )
     }
