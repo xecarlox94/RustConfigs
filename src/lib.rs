@@ -8,6 +8,23 @@ use std::{
     }, path::PathBuf
 };
 
+
+
+pub struct NewDockerProject {
+    project_name: String,
+    // curr_dir: String,
+    docker_base_name: String,
+    docker_options: DockerOptions,
+}
+
+struct DockerOptions {
+    x11_support: bool,
+    nvidia_runtime: bool,
+    is_debian_based: bool,
+}
+
+
+
 impl NewDockerProject {
 
     pub fn new(
@@ -21,7 +38,7 @@ impl NewDockerProject {
     {
 
         NewDockerProject {
-            name: project_name,
+            project_name,
             docker_base_name,
             docker_options:
                 DockerOptions {
@@ -32,8 +49,62 @@ impl NewDockerProject {
         }
     }
 
-    fn get_docker_build_and_runfile(&self) -> String {
-        format!(r#"
+    pub fn bootstrap_docker_project(self, curr_dir: PathBuf) -> Result<(), io::Error> {
+
+        ProjectDirectory(
+            curr_dir,
+            Directory(
+                "another_dir".to_string(),
+                Some(Box::new(vec![
+                    PrjFile::Dir(Directory(
+                        "src".to_string(),
+                        Some(Box::new(vec![
+                            PrjFile::DirFile(
+                                CodeFile(
+                                    "hello.sh".to_string(), 
+                                    "echo \"Hello World\"".to_string()
+                                )
+                            ),
+                        ]))
+                    )),
+                    PrjFile::DirFile(self.get_docker_build_and_runfile()),
+                    PrjFile::DirFile(self.get_dockerfile()),
+                    PrjFile::Dir(self.get_docker_utils_dir()),
+                ]))
+            )
+        )
+        .build()
+
+    }
+
+
+    fn get_dockerfile(&self) -> CodeFile {
+
+        let non_int_debian_str = 
+            if self.docker_options.is_debian_based
+            {
+                "ARG DEBIAN_FRONTEND=noninteractive"
+            }
+            else { "" };
+
+        CodeFile(
+            "Dockerfile".to_string(),
+            format!(
+                "FROM {}\n\n{}\n\n\nWORKDIR /src",
+                self.docker_base_name,
+                non_int_debian_str
+            )
+        )
+    }
+
+
+    fn get_docker_build_and_runfile(&self) -> CodeFile {
+
+        eprintln!("create executable files!!!!");
+
+        CodeFile(
+            "run.sh".to_string(),
+            format!(r#"
 clear &&
     docker_build.sh &&
     docker_run.sh
@@ -47,50 +118,41 @@ clear &&
             --name $PROJECT_FOLDER
         "
         $ADD_OPTS
-        "#)
-    }
-
-    fn get_dockerfile(&self) -> String {
-        format!(
-            "FROM {}\n{}\nWORKDIR /src\n\n",
-            self.docker_base_name,
-            if self.docker_options.is_debian_based
-            {
-                "ARG DEBIAN_FRONTEND=noninteractive"
-            }
-            else { "" }
+            "#)
         )
     }
 
-    pub fn bootstrap_docker_project(self, curr_dir: PathBuf) -> Result<(), io::Error> {
+    fn get_build_docker_util_file(&self) -> CodeFile {
+        CodeFile(
+            "build_docker.sh".to_string(), 
+            r#"
+docker build util
 
-
-        let _ = ProjectDirectory(
-            curr_dir,
-            Directory(
-                "another_dir".to_string(),
-                Some(Box::new(vec![
-                    PrjFile::DirFile(CodeFile("run.sh".to_string(), "top run fileeeee".to_string())),
-                    PrjFile::DirFile(CodeFile("Dockerfile".to_string(), "dockerfileeeee".to_string())),
-                    PrjFile::Dir(Directory(
-                        "shell_utils".to_string(),
-                        Some(Box::new(vec![
-                            PrjFile::DirFile(CodeFile("build_docker.sh".to_string(), "docker build util".to_string())),
-                            PrjFile::DirFile(CodeFile("run_docker.sh".to_string(), "docker run util".to_string())),
-                        ]))
-                    )),
-                    PrjFile::Dir(Directory(
-                        "src".to_string(),
-                        Some(Box::new(vec![
-                            PrjFile::DirFile(CodeFile("hello.sh".to_string(), "echo \"Hello World\"".to_string())),
-                        ]))
-                    ))
-                ]))
-            )
+hello there!!!!!
+            "#.to_string()
         )
-            .build()?;
+    }
 
-        Ok(())
+    fn get_run_docker_util_file(&self) -> CodeFile {
+        CodeFile(
+            "run_docker.sh".to_string(), 
+            r#"
+docker run util
+
+
+Hi there!!!!!!!!!!!!!!!!!!
+            "#.to_string()
+        )
+    }
+    
+    fn get_docker_utils_dir(&self) -> Directory {
+        Directory(
+            "shell_utils".to_string(),
+            Some(Box::new(vec![
+                PrjFile::DirFile(self.get_build_docker_util_file()),
+                PrjFile::DirFile(self.get_run_docker_util_file()),
+            ]))
+        )
     }
 
 }
@@ -107,6 +169,7 @@ impl PrjFile {
 
     fn create_file_blob(self, current_dir: PathBuf) -> () {
         match self {
+
             PrjFile::Dir(directory) => directory.create_directory(current_dir),
             PrjFile::DirFile(code_file) => code_file.create_file(current_dir),
         }
@@ -169,6 +232,14 @@ impl Directory {
         match maybe_box_dir_contents {
             Some(box_dir_contents) => {
 
+                for prf_file in *box_dir_contents {
+
+                    prf_file.create_file_blob(
+                        new_dir.clone()
+                    );
+                };
+
+                /* 
                 let prjFiles : Vec<PrjFile> = *box_dir_contents;
 
                 let _ = prjFiles
@@ -181,6 +252,9 @@ impl Directory {
                         }
                     )
                     .collect::<Vec<_>>();
+                */
+
+
             },
             None => (),
         }
@@ -235,29 +309,6 @@ impl ProjectDirectory {
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-struct DockerOptions {
-    x11_support: bool,
-    nvidia_runtime: bool,
-    is_debian_based: bool,
-}
-
-pub struct NewDockerProject {
-    name: String,
-    // curr_dir: String,
-    docker_base_name: String,
-    docker_options: DockerOptions,
-}
 
 
     /*
