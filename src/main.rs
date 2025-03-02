@@ -14,6 +14,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 fn build_testing_docker_project() -> NewDockerProject {
 
+    eprintln!("ADD RC<STR> TO PROGRAM, INSTEAD OF COPY STRING (FOR IMMUTABLE CASES)");
+    eprintln!("ADD RC<[T]> TO PROGRAM, INSTEAD OF VECTOR COPYING (FOR IMMUTABLE CASES)");
+
     let project_name = "sf".to_string();
     let docker_base_name = "ubuntu".to_string();
     let x11_support = true;
