@@ -54,10 +54,10 @@ impl<'a> NewDockerProject<'a> {
         ProjectDirectory(
             curr_dir,
             Directory(
-                "another_dir".to_string(),
+                "another_dir",
                 Some(Box::new(vec![
                     PrjFile::Dir(Directory(
-                        "src".to_string(),
+                        "src",
                         Some(Box::new(vec![
                             PrjFile::DirFile(
                                 CodeFile(
@@ -155,7 +155,7 @@ hello_world_run_docker () {
 
     fn get_docker_utils_dir(&self) -> Directory {
         Directory(
-            "shell_utils".to_string(),
+            "shell_utils",
             Some(Box::new(vec![
                 PrjFile::DirFile(self.get_build_docker_util_file()),
                 PrjFile::DirFile(self.get_run_docker_util_file()),
@@ -168,12 +168,12 @@ hello_world_run_docker () {
 
 
 
-enum PrjFile {
-    Dir(Directory),
+enum PrjFile<'a> {
+    Dir(Directory<'a>),
     DirFile(CodeFile),
 }
 
-impl PrjFile {
+impl<'a> PrjFile<'a> {
 
     fn create_file_blob(self, current_dir: PathBuf) -> () {
         match self {
@@ -217,16 +217,16 @@ impl CodeFile {
 }
 
 
-struct Directory(
-    NameBlob,
+struct Directory<'a>(
+    &'a str,
     Option<
         Box<
-            Vec<PrjFile>
+            Vec<PrjFile<'a>>
         >
     >
 );
 
-impl Directory {
+impl<'a> Directory<'a> {
 
 
     fn create_directory(self, curr_folder: PathBuf) -> ()
@@ -285,9 +285,9 @@ impl Directory {
 
 
 
-struct ProjectDirectory(PathBuf, Directory);
+struct ProjectDirectory<'a>(PathBuf, Directory<'a>);
 
-impl ProjectDirectory {
+impl<'a> ProjectDirectory<'a> {
 
     fn build(self) -> Result<(), io::Error>
     {
