@@ -61,7 +61,7 @@ impl<'a> NewDockerProject<'a> {
                         Some(Box::new(vec![
                             PrjFile::DirFile(
                                 CodeFile(
-                                    "hello.sh".to_string(),
+                                    "hello.sh",
                                     "echo \"Hello World\"".to_string()
                                 )
                             ),
@@ -88,7 +88,7 @@ impl<'a> NewDockerProject<'a> {
             else { "" };
 
         CodeFile(
-            "Dockerfile".to_string(),
+            "Dockerfile",
             format!(
                 "FROM {}\n\n{}\n\n\nWORKDIR /src",
                 self.docker_base_name,
@@ -103,7 +103,7 @@ impl<'a> NewDockerProject<'a> {
         eprintln!("create executable files!!!!");
 
         CodeFile(
-            "run.sh".to_string(),
+            "run.sh",
             format!(r#"
 
 source shell_utils/build_docker.sh
@@ -133,7 +133,7 @@ hello_world_run_docker
 
     fn get_build_docker_util_file(&self) -> CodeFile {
         CodeFile(
-            "build_docker.sh".to_string(),
+            "build_docker.sh",
             r#"
 hello_world_build_docker () {
    echo 'hello, world! from build docker!'
@@ -144,7 +144,7 @@ hello_world_build_docker () {
 
     fn get_run_docker_util_file(&self) -> CodeFile {
         CodeFile(
-            "run_docker.sh".to_string(),
+            "run_docker.sh",
             r#"
 hello_world_run_docker () {
    echo 'hello, world! from run docker!'
@@ -170,7 +170,7 @@ hello_world_run_docker () {
 
 enum PrjFile<'a> {
     Dir(Directory<'a>),
-    DirFile(CodeFile),
+    DirFile(CodeFile<'a>),
 }
 
 impl<'a> PrjFile<'a> {
@@ -186,12 +186,11 @@ impl<'a> PrjFile<'a> {
 
 
 type Content = String;
-type NameBlob = String;
 
-struct CodeFile(NameBlob, Content);
+struct CodeFile<'a>(&'a str, Content);
 
 
-impl CodeFile {
+impl<'a> CodeFile<'a> {
 
     fn create_file(self, current_dir: PathBuf) -> () {
 
