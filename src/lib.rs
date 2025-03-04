@@ -10,10 +10,10 @@ use std::{
 
 
 
-pub struct NewDockerProject {
-    project_name: String,
+pub struct NewDockerProject<'a> {
+    project_name: &'a str,
     // curr_dir: String,
-    docker_base_name: String,
+    docker_base_name: &'a str,
     docker_options: DockerOptions,
 }
 
@@ -25,11 +25,11 @@ struct DockerOptions {
 
 
 
-impl NewDockerProject {
+impl<'a> NewDockerProject<'a> {
 
     pub fn new(
-        project_name: String,
-        docker_base_name: String,
+        project_name: &'a str,
+        docker_base_name: &'a str,
         x11_support: bool,
         nvidia_runtime: bool,
         is_debian_based: bool,
@@ -61,7 +61,7 @@ impl NewDockerProject {
                         Some(Box::new(vec![
                             PrjFile::DirFile(
                                 CodeFile(
-                                    "hello.sh".to_string(), 
+                                    "hello.sh".to_string(),
                                     "echo \"Hello World\"".to_string()
                                 )
                             ),
@@ -80,7 +80,7 @@ impl NewDockerProject {
 
     fn get_dockerfile(&self) -> CodeFile {
 
-        let non_int_debian_str = 
+        let non_int_debian_str =
             if self.docker_options.is_debian_based
             {
                 "ARG DEBIAN_FRONTEND=noninteractive"
@@ -133,7 +133,7 @@ hello_world_run_docker
 
     fn get_build_docker_util_file(&self) -> CodeFile {
         CodeFile(
-            "build_docker.sh".to_string(), 
+            "build_docker.sh".to_string(),
             r#"
 hello_world_build_docker () {
    echo 'hello, world! from build docker!'
@@ -144,7 +144,7 @@ hello_world_build_docker () {
 
     fn get_run_docker_util_file(&self) -> CodeFile {
         CodeFile(
-            "run_docker.sh".to_string(), 
+            "run_docker.sh".to_string(),
             r#"
 hello_world_run_docker () {
    echo 'hello, world! from run docker!'
@@ -152,7 +152,7 @@ hello_world_run_docker () {
             "#.to_string()
         )
     }
-    
+
     fn get_docker_utils_dir(&self) -> Directory {
         Directory(
             "shell_utils".to_string(),
@@ -204,6 +204,7 @@ impl CodeFile {
         };
 
         match File::create(docker_file_path) {
+
             Ok(mut docker_file) => {
                 let _ = docker_file.write_all(
                     content.as_bytes()
@@ -247,7 +248,7 @@ impl Directory {
                     );
                 };
 
-                /* 
+                /*
                 let prjFiles : Vec<PrjFile> = *box_dir_contents;
 
                 let _ = prjFiles
