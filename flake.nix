@@ -10,26 +10,40 @@
   outputs = { self, nixpkgs, rust-overlay, flake-utils, ... }:
     flake-utils.lib.eachDefaultSystem (system:
       let
-        overlays = [ (import rust-overlay) ];
-        pkgs = import nixpkgs {
-          inherit system overlays;
-        };
-      in
-      with pkgs;
-      {
-        devShells.default = mkShell {
-          buildInputs = [
-            openssl
-            pkg-config
-            fd
-            rust-analyzer
-            rust-bin.beta.latest.default
-          ];
 
-          shellHook = ''
-            alias find=fd
-          '';
+        pkgs = import nixpkgs {
+          inherit system;
+          overlays = [ (import rust-overlay) ];
         };
+
+        buildInputs = with pkgs; [
+          openssl
+          pkg-config
+          fd
+          rust-analyzer
+          rust-bin.beta.latest.default
+        ];
+
+      in {
+
+        devShells = {
+          default = pkgs.mkShell {
+            buildInputs = buildInputs;
+
+            shellHook = ''
+              alias find=fd
+            '';
+          };
+        };
+
+        apps = {
+          default = flake-utils.lib.mkApp {
+            drv = pkgs.writeShellScriptBin "run-rust-app" ''
+              cargo run
+            '';
+          };
+        };
+
       }
     );
 }
