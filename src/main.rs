@@ -25,5 +25,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     docker_prj.bootstrap_docker_project(curr_path)?;
 
+    eprintln!("wrapper for creating bash files with shebangs");
+    eprintln!("funciton to create executable bash files");
+
     Ok(())
 }

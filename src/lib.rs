@@ -1,3 +1,4 @@
+
 use std::{
     fs::{
         self,
@@ -5,7 +6,9 @@ use std::{
     }, io::{
         self,
         Write,
-    }, path::PathBuf
+    }, 
+    path::PathBuf, 
+    process::Command, 
 };
 
 
@@ -73,7 +76,16 @@ impl<'a> NewDockerProject<'a> {
                 ]))
             )
         )
-        .build()
+        .build()?;
+        
+        eprintln!("EXECUTE BASH SCRIPT TO GO INSIDE PRJ FOLDER AND RUN run.sh");
+
+        // Command::new("bash")
+            // .args(["./run.sh"])
+            // .output()
+            // .map(|_| ())
+
+        Ok(())
 
     }
 
@@ -154,11 +166,8 @@ DOCKER_NAME=$(generate_docker_name)
 
 clear &&\
     echo "building $DOCKER_NAME" &&\
-
-
-build_docker_fn "$DOCKER_NAME" || exit 1
-
-exit 0
+    \
+    build_docker_fn "$DOCKER_NAME" || exit 1
 
 run_docker_fn \
     "\
@@ -170,11 +179,11 @@ run_docker_fn \
         --privileged
         --name $PROJECT_FOLDER
     "\
-    {} \
-    "$DOCKER_NAME"
+    "$DOCKER_NAME" \
+    {}
 
             "#, 
-            "-x -n".to_string()
+            "-n -x".to_string()
             )
         )
     }
@@ -237,13 +246,15 @@ run_docker_fn () {
 
     DOCKER_NAME="$3"
 
+    echo "4: $4"
+    echo "5: $5"
+
 
     shift 3
 
 
     X11=false
     NVIDIA=false
-    TAG=false
 
     while getopts 'xn:t:' OPTION;
     do
@@ -253,11 +264,6 @@ run_docker_fn () {
                 ;;
             n)
                 NVIDIA=true
-                ;;
-            t)
-                TAG=true
-                TAG_VALUE=${OPTARG}
-                echo "OPTARG: $OPTARG"
                 ;;
             *)
                 echo "NOTHING"
@@ -327,15 +333,20 @@ run_docker_fn () {
     fi
 
     CMD="\
-    $XHOST \
     sudo docker run \
     -it \
-    -v $HOME/.config/.FILES:/root/.config/.FILES \
-    $DOCKER_ARGS \
-    $ADD_OPTS \
     $DOCKER_NAME \
-    $RUN_CMD \
     "
+
+    #CMD="\
+    #$XHOST \
+    #sudo docker run \
+    #-it \
+    #$DOCKER_ARGS \
+    #$ADD_OPTS \
+    #$DOCKER_NAME \
+    #$RUN_CMD \
+    #"
 
     echo "$CMD" > .command_executed.sh
 
