@@ -6,9 +6,9 @@ use std::{
     }, io::{
         self,
         Write,
-    }, 
-    path::PathBuf, 
-    process::Command, 
+    },
+    path::PathBuf,
+    process::Command,
 };
 
 
@@ -77,7 +77,7 @@ impl<'a> NewDockerProject<'a> {
             )
         )
         .build()?;
-        
+
         eprintln!("EXECUTE BASH SCRIPT TO GO INSIDE PRJ FOLDER AND RUN run.sh");
 
         // Command::new("bash")
@@ -182,7 +182,7 @@ run_docker_fn \
     "$DOCKER_NAME" \
     {}
 
-            "#, 
+            "#,
             "-n -x".to_string()
             )
         )
@@ -379,9 +379,8 @@ impl<'a> PrjFile<'a> {
 }
 
 
-type Content = String;
 
-struct CodeFile<'a>(&'a str, Content);
+struct CodeFile<'a>(&'a str, String);
 
 
 impl<'a> CodeFile<'a> {
@@ -432,6 +431,7 @@ impl<'a> Directory<'a> {
         let _ = fs::create_dir(&new_dir);
 
         match maybe_box_dir_contents {
+
             Some(box_dir_contents) => {
 
                 for prf_file in box_dir_contents {
@@ -440,8 +440,8 @@ impl<'a> Directory<'a> {
                         new_dir.clone()
                     );
                 };
-
             },
+
             None => (),
         }
     }
@@ -456,10 +456,6 @@ impl<'a> Directory<'a> {
 
 
 }
-
-
-
-
 
 
 struct ProjectDirectory<'a>(PathBuf, Directory<'a>);
@@ -491,43 +487,5 @@ impl<'a> ProjectDirectory<'a> {
             directory.create_directory(current_path)
         )
     }
-
 }
 
-
-
-
-
-
-// echo "sudo to create run.sh executable file"
-// touch_x run.sh
-
-// generates an executable file called run.sh
-//
-//      it generates a cmd string
-//      it generates a docker args with sane defaults
-
-
-// Requirements docker build
-//
-// removes old dangling images and volumes
-//
-// gen_container_name from current directory
-//
-// runs docker run
-
-
-// Requirements docker run
-//
-// checks run arguments for Nvidia and X11
-//
-//
-//     CMD="\
-//     $XHOST \
-//     sudo docker run \
-//     -it \
-//     $DOCKER_ARGS \
-//     $ADD_OPTS \
-//     $DOCKER_NAME \
-//     $RUN_CMD \
-//     "
