@@ -155,10 +155,10 @@ DOCKER_NAME=$(generate_docker_name)
 clear &&\
     echo "building $DOCKER_NAME" &&\
 
+
+build_docker_fn "$DOCKER_NAME" || exit 1
+
 exit 0
-
-    build_docker_fn "$DOCKER_NAME" || exit 1
-
 
 run_docker_fn \
     "\
@@ -194,14 +194,14 @@ build_docker_fn () {
             #-a \
             #--filter "until=4w"
 
-
-    sudo docker rmi $(docker images -f dangling=true)
-    sudo docker volume rm $(sudo docker volume ls -q -f dangling=true)
+    # sudo docker rmi $(docker images -f dangling=true)
+    # sudo docker volume rm $(sudo docker volume ls -q -f dangling=true)
 
 
     sudo \
         docker build . \
             -t "$DOCKER_NAME"
+
             #
             #
             #  I need to add ARG environments to extend further things, such as:
@@ -209,6 +209,7 @@ build_docker_fn () {
             #  adding user to container user group
             #
             #--build-arg BUILD_ENV=dev
+
 }
 
             "#.to_string()
