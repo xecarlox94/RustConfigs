@@ -24,6 +24,21 @@
           rust-bin.beta.latest.default
         ];
 
+        myRustPkg = pkgs.rustPlatform.buildRustPackage {
+
+          pname = "rust-configs";
+          version = "0.1.0";
+
+          src = ./.; 
+
+          cargoLock = {
+            lockFile = ./Cargo.lock;  # Ensures reproducibility
+          };
+
+          nativeBuildInputs = [ pkgs.pkg-config ];
+          buildInputs = [ pkgs.openssl ];
+        };
+
       in {
 
         devShells = {
@@ -38,9 +53,7 @@
 
         apps = {
           default = flake-utils.lib.mkApp {
-            drv = pkgs.writeShellScriptBin "run-rust-app" ''
-              cargo run
-            '';
+            drv = myRustPkg;
           };
         };
 
