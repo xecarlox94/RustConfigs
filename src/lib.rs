@@ -55,10 +55,10 @@ impl<'a> NewDockerProject<'a> {
             curr_dir,
             Directory(
                 "another_dir",
-                Some(Box::new(vec![
+                Some(Box::new([
                     PrjFile::Dir(Directory(
                         "src",
-                        Some(Box::new(vec![
+                        Some(Box::new([
                             PrjFile::DirFile(
                                 CodeFile(
                                     "hello.sh",
@@ -156,7 +156,7 @@ hello_world_run_docker () {
     fn get_docker_utils_dir(&self) -> Directory {
         Directory(
             "shell_utils",
-            Some(Box::new(vec![
+            Some(Box::new([
                 PrjFile::DirFile(self.get_build_docker_util_file()),
                 PrjFile::DirFile(self.get_run_docker_util_file()),
             ]))
@@ -220,7 +220,7 @@ struct Directory<'a>(
     &'a str,
     Option<
         Box<
-            Vec<PrjFile<'a>>
+            [PrjFile<'a>]
         >
     >
 );
@@ -240,28 +240,12 @@ impl<'a> Directory<'a> {
         match maybe_box_dir_contents {
             Some(box_dir_contents) => {
 
-                for prf_file in *box_dir_contents {
+                for prf_file in box_dir_contents {
 
                     prf_file.create_file_blob(
                         new_dir.clone()
                     );
                 };
-
-                /*
-                let prjFiles : Vec<PrjFile> = *box_dir_contents;
-
-                let _ = prjFiles
-                    .into_iter()
-                    .map(
-                        |prf_file: PrjFile| {
-
-                            println!("creating file blobs");
-                            prf_file.create_file_blob(new_dir.clone());
-                        }
-                    )
-                    .collect::<Vec<_>>();
-                */
-
 
             },
             None => (),
