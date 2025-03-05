@@ -154,7 +154,8 @@ generate_docker_name () {
 
     fn get_docker_build_and_runfile(&self) -> CodeFile {
 
-        eprintln!("create executable files!!!!");
+        let x11_nvidia_str = "-n -x".to_string();
+
 
         CodeFile(
             "run.sh",
@@ -183,7 +184,7 @@ run_docker_fn \
     {}
 
             "#,
-            "-n -x".to_string()
+            x11_nvidia_str
             )
         )
     }
