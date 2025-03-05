@@ -27,7 +27,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     eprintln!("ADD RC<[T]> TO PROGRAM, INSTEAD OF VECTOR COPYING (FOR IMMUTABLE CASES)");
 
     eprintln!("wrapper for creating bash files with shebangs");
-    eprintln!("funciton to create executable bash files");
+    eprintln!("functon to create executable bash files");
+    eprintln!("Run the initial run.sh command");
 
     Ok(())
 }
