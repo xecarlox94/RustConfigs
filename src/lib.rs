@@ -11,10 +11,10 @@ use std::{
     process::Command
 };
 
-mod docker_environment;
+// mod docker_environment;
 
 
-use docker_environment::{
+use crate::docker_environment::{
     project_directory::{
         PrjFile,
         Directory,
