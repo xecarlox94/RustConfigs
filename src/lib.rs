@@ -1,9 +1,9 @@
-
 use std::{
     fs::{
         self,
         File,
-    }, io::{
+    },
+    io::{
         self,
         Write,
     },
@@ -11,7 +11,8 @@ use std::{
     process::Command
 };
 
-// mod docker_environment;
+
+mod docker_environment;
 
 
 use crate::docker_environment::{
@@ -21,14 +22,14 @@ use crate::docker_environment::{
         ProjectDirectory,
     },
     file::CodeFile,
+    project::{
+        DockerOptions,
+    },
 };
 
 
-pub use docker_environment::{
-    project::{
-        NewDockerProject,
-        DockerOptions,
-    },
+pub use docker_environment::project::{
+    NewDockerProject,
 };
 
 
@@ -459,35 +460,3 @@ impl<'a> Directory<'a> {
 
 
 }
-
-
-
-impl<'a> ProjectDirectory<'a> {
-
-    fn build(self) -> Result<(), io::Error>
-    {
-
-        eprintln!("change this current dir to an immutable directory, use pointers!!!!");
-
-        let ProjectDirectory(current_path, directory) = self;
-
-        let mut dir_to_be_created = current_path.clone();
-
-        dir_to_be_created.push(directory.get_dirname_str());
-
-
-        match fs::exists(&dir_to_be_created) {
-
-            Err(err) => return Err(err),
-
-            Ok(true) => fs::remove_dir_all(dir_to_be_created.clone())?,
-
-            Ok(false) => (),
-        };
-
-        Ok(
-            directory.create_directory(current_path)
-        )
-    }
-}
-
