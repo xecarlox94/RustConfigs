@@ -8,23 +8,28 @@ use std::{
         Write,
     },
     path::PathBuf,
-    process::Command,
+    process::Command
+};
+
+mod docker_environment;
+
+
+use docker_environment::{
+    project_directory::{
+        PrjFile,
+        Directory,
+        ProjectDirectory,
+    },
+    file::CodeFile,
 };
 
 
-
-pub struct NewDockerProject<'a> {
-    project_name: &'a str,
-    // curr_dir: String,
-    docker_base_name: &'a str,
-    docker_options: DockerOptions,
-}
-
-struct DockerOptions {
-    x11_support: bool,
-    nvidia_runtime: bool,
-    is_debian_based: bool,
-}
+pub use docker_environment::{
+    project::{
+        NewDockerProject,
+        DockerOptions,
+    },
+};
 
 
 
@@ -142,8 +147,6 @@ generate_docker_name () {
     DOCKER_NAME="$DOCKER_NAME:latest"
     echo $DOCKER_NAME
 }
-
-
                         "#.to_owned()
                     )
                 ),
@@ -154,8 +157,20 @@ generate_docker_name () {
 
     fn get_docker_build_and_runfile(&self) -> CodeFile {
 
-        let x11_nvidia_str = "-n -x".to_string();
+        let get_char_or_empty = |b: bool, s: &'a str| -> &'a str {
+            if b {
+                s
+            }
+            else {
+                ""
+            }
+        };
 
+        let x11_nvidia_str = format!(
+            "{}{}",
+            get_char_or_empty(self.docker_options.nvidia_runtime, "-n "),
+            get_char_or_empty(self.docker_options.x11_support, "-x"),
+        );
 
         CodeFile(
             "run.sh",
@@ -171,18 +186,21 @@ clear &&\
     build_docker_fn "$DOCKER_NAME" || exit 1
 
 run_docker_fn \
+    \
     "\
         bash \
     "\
+    \
     "\
         -v '${{PWD}}/src':/src
         --rm
         --privileged
         --name $PROJECT_FOLDER
     "\
+    \
     "$DOCKER_NAME" \
+    \
     {}
-
             "#,
             x11_nvidia_str
             )
@@ -334,19 +352,19 @@ run_docker_fn () {
     fi
 
     CMD="\
-    sudo docker run \
-    -it \
-    $DOCKER_NAME \
+sudo docker run \
+-it \
+$DOCKER_NAME \
     "
 
     #CMD="\
-    #$XHOST \
-    #sudo docker run \
-    #-it \
-    #$DOCKER_ARGS \
-    #$ADD_OPTS \
-    #$DOCKER_NAME \
-    #$RUN_CMD \
+#$XHOST \
+#sudo docker run \
+#-it \
+#$DOCKER_ARGS \
+#$ADD_OPTS \
+#$DOCKER_NAME \
+#$RUN_CMD \
     #"
 
     echo "$CMD" > .command_executed.sh
@@ -362,12 +380,6 @@ run_docker_fn () {
 }
 
 
-
-enum PrjFile<'a> {
-    Dir(Directory<'a>),
-    DirFile(CodeFile<'a>),
-}
-
 impl<'a> PrjFile<'a> {
 
     fn create_file_blob(self, current_dir: PathBuf) -> () {
@@ -381,7 +393,6 @@ impl<'a> PrjFile<'a> {
 
 
 
-struct CodeFile<'a>(&'a str, String);
 
 
 impl<'a> CodeFile<'a> {
@@ -409,15 +420,6 @@ impl<'a> CodeFile<'a> {
     }
 }
 
-
-struct Directory<'a>(
-    &'a str,
-    Option<
-        Box<
-            [PrjFile<'a>]
-        >
-    >
-);
 
 impl<'a> Directory<'a> {
 
@@ -459,7 +461,6 @@ impl<'a> Directory<'a> {
 }
 
 
-struct ProjectDirectory<'a>(PathBuf, Directory<'a>);
 
 impl<'a> ProjectDirectory<'a> {
 
