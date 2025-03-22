@@ -1,14 +1,10 @@
 use std::{
-    fs::{
-        self,
-        File,
-    },
+    fs::File,
     io::{
-        self,
         Write,
+        Error,
     },
     path::PathBuf,
-    process::Command
 };
 
 
@@ -22,15 +18,13 @@ use crate::docker_environment::{
         ProjectDirectory,
     },
     file::CodeFile,
-    project::{
-        DockerOptions,
-    },
+    project::DockerOptions,
 };
 
 
-pub use docker_environment::project::{
-    NewDockerProject,
-};
+pub use docker_environment::project::NewDockerProject;
+
+
 
 
 
@@ -58,7 +52,7 @@ impl<'a> NewDockerProject<'a> {
         }
     }
 
-    pub fn bootstrap_docker_project(self, curr_dir: PathBuf) -> Result<(), io::Error> {
+    pub fn bootstrap_docker_project(self, curr_dir: PathBuf) -> Result<(), Error> {
 
         ProjectDirectory(
             curr_dir,
@@ -86,10 +80,14 @@ impl<'a> NewDockerProject<'a> {
 
         eprintln!("EXECUTE BASH SCRIPT TO GO INSIDE PRJ FOLDER AND RUN run.sh");
 
+
+        // use std::process::Command,
+        //
         // Command::new("bash")
             // .args(["./run.sh"])
             // .output()
             // .map(|_| ())
+
 
         Ok(())
 
@@ -375,87 +373,6 @@ $DOCKER_NAME \
 }
             "#.to_string()
         )
-    }
-
-
-}
-
-
-impl<'a> PrjFile<'a> {
-
-    fn create_file_blob(self, current_dir: PathBuf) -> () {
-        match self {
-
-            PrjFile::Dir(directory) => directory.create_directory(current_dir),
-            PrjFile::DirFile(code_file) => code_file.create_file(current_dir),
-        }
-    }
-}
-
-
-
-
-
-impl<'a> CodeFile<'a> {
-
-    fn create_file(self, current_dir: PathBuf) -> () {
-
-        let CodeFile(file_name, content) = self;
-
-        let docker_file_path = {
-            let mut file_dir = current_dir.clone();
-            file_dir.push(file_name);
-            file_dir
-        };
-
-        match File::create(docker_file_path) {
-
-            Ok(mut docker_file) => {
-                let _ = docker_file.write_all(
-                    content.as_bytes()
-                );
-            },
-            Err(_) => (),
-        };
-
-    }
-}
-
-
-impl<'a> Directory<'a> {
-
-
-    fn create_directory(self, curr_folder: PathBuf) -> ()
-    {
-        let Directory(dir_name, maybe_box_dir_contents) = self;
-
-        let mut new_dir = curr_folder.clone();
-        new_dir.push(dir_name);
-
-        let _ = fs::create_dir(&new_dir);
-
-        match maybe_box_dir_contents {
-
-            Some(box_dir_contents) => {
-
-                for prf_file in box_dir_contents {
-
-                    prf_file.create_file_blob(
-                        new_dir.clone()
-                    );
-                };
-            },
-
-            None => (),
-        }
-    }
-
-    fn get_dirname_str(&self) -> String {
-
-        let Directory(dir_name, _): &Directory = self;
-
-        dir_name.to_string()
-
     }
 
 

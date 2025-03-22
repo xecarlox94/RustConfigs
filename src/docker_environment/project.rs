@@ -1,6 +1,5 @@
 
 
-
 pub struct NewDockerProject<'a> {
     pub project_name: &'a str,
     // curr_dir: String,

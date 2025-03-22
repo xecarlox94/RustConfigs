@@ -3,11 +3,12 @@ use std::{
     fs::{
         exists,
         remove_dir_all,
+        create_dir,
     },
     io::Error,
 };
 
-pub use crate::docker_environment::file::{CodeFile};
+use crate::docker_environment::file::CodeFile;
 
 
 pub struct Directory<'a>(
@@ -20,9 +21,61 @@ pub struct Directory<'a>(
 );
 
 
+impl<'a> Directory<'a> {
+
+
+    fn create_directory(self, curr_folder: PathBuf) -> ()
+    {
+        let Directory(dir_name, maybe_box_dir_contents) = self;
+
+        let mut new_dir = curr_folder.clone();
+        new_dir.push(dir_name);
+
+        let _ = create_dir(&new_dir);
+
+        match maybe_box_dir_contents {
+
+            Some(box_dir_contents) => {
+
+                for prf_file in box_dir_contents {
+
+                    prf_file.create_file_blob(
+                        new_dir.clone()
+                    );
+                };
+            },
+
+            None => (),
+        }
+    }
+
+    fn get_dirname_str(&self) -> String {
+
+        let Directory(dir_name, _): &Directory = self;
+
+        dir_name.to_string()
+
+    }
+
+
+}
+
+
 pub enum PrjFile<'a> {
     Dir(Directory<'a>),
     DirFile(CodeFile<'a>),
+}
+
+
+impl<'a> PrjFile<'a> {
+
+    pub fn create_file_blob(self, current_dir: PathBuf) -> () {
+        match self {
+
+            PrjFile::Dir(directory) => directory.create_directory(current_dir),
+            PrjFile::DirFile(code_file) => code_file.create_file(current_dir),
+        }
+    }
 }
 
 
