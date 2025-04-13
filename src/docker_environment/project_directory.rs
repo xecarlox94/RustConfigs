@@ -7,6 +7,7 @@ use std::{
     },
     io::Error,
 };
+use std::io::Write;
 
 use crate::docker_environment::file::CodeFile;
 

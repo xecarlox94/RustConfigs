@@ -1,15 +1,15 @@
 use std::{
     fs::File,
     path::PathBuf,
+    io::Write,
 };
-
 
 pub struct CodeFile<'a>(pub &'a str, pub String);
 
 
 impl<'a> CodeFile<'a> {
 
-    fn create_file(self, current_dir: PathBuf) -> () {
+    pub fn create_file(self, current_dir: PathBuf) -> () {
 
         let CodeFile(file_name, content) = self;
 
