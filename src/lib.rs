@@ -61,7 +61,8 @@ impl<'a> NewDockerProject<'a> {
                             PrjFile::DirFile(
                                 CodeFile(
                                     "hello.sh",
-                                    "echo \"Hello World\"".to_string()
+                                    "echo \"Hello World\"".to_string(),
+                                    true
                                 )
                             ),
                         ]))
@@ -74,7 +75,7 @@ impl<'a> NewDockerProject<'a> {
         )
         .build()?;
 
-        eprintln!("EXECUTE BASH SCRIPT TO GO INSIDE PRJ FOLDER AND RUN run.sh");
+        // eprintln!("EXECUTE BASH SCRIPT TO GO INSIDE PRJ FOLDER AND RUN run.sh");
 
 
         // use std::process::Command,
@@ -198,7 +199,8 @@ run_docker_fn \
     {}
             "#,
             x11_nvidia_str
-            )
+            ),
+            true
         )
     }
 
@@ -235,7 +237,8 @@ build_docker_fn () {
 
 }
 
-            "#.to_string()
+            "#.to_string(),
+            true
         )
     }
 
@@ -367,7 +370,8 @@ $DOCKER_NAME \
     eval "$CMD"
 
 }
-            "#.to_string()
+            "#.to_string(),
+        false
         )
     }
 

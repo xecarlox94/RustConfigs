@@ -74,7 +74,7 @@ impl<'a> PrjFile<'a> {
         match self {
 
             PrjFile::Dir(directory) => directory.create_directory(current_dir),
-            PrjFile::DirFile(code_file) => code_file.create_file(current_dir),
+            PrjFile::DirFile(code_file) => code_file.create_file(current_dir).expect("did not create file properly"),
         }
     }
 }

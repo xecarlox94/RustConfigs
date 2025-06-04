@@ -23,12 +23,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     docker_prj.bootstrap_docker_project(curr_path)?;
 
-    eprintln!("ADD RC<STR> TO PROGRAM, INSTEAD OF COPY STRING (FOR IMMUTABLE CASES)");
-    eprintln!("ADD RC<[T]> TO PROGRAM, INSTEAD OF VECTOR COPYING (FOR IMMUTABLE CASES)");
-
-    eprintln!("wrapper for creating bash files with shebangs");
-    eprintln!("functon to create executable bash files");
-    eprintln!("Run the initial run.sh command");
+    // eprintln!("ADD RC<STR> TO PROGRAM, INSTEAD OF COPY STRING (FOR IMMUTABLE CASES)");
+    // eprintln!("ADD RC<[T]> TO PROGRAM, INSTEAD OF VECTOR COPYING (FOR IMMUTABLE CASES)");
+    // eprintln!("wrapper for creating bash files with shebangs");
+    // eprintln!("functon to create executable bash files");
+    // eprintln!("Run the initial run.sh command");
 
     Ok(())
 }
