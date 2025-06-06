@@ -1,55 +1,93 @@
-use std::{
-    io::
-        Error
-    ,
-    path::PathBuf,
-};
-
+use std::{io::Error, path::PathBuf};
 
 mod docker_environment;
 
-
 use crate::docker_environment::{
-    project_directory::{
-        PrjFile,
-        Directory,
-        ProjectDirectory,
-    },
     project::DockerOptions,
+    project_directory::{Directory, PrjFile, ProjectDirectory},
 };
-
 
 use docker_environment::file::{CodeFile, FilePrj, TextFile};
 pub use docker_environment::project::NewDockerProject;
 
+impl<'a, 'tmp> DockerOptions<'a> {
+    fn get_dockerfile(&self) -> String {
+        format!(
+            "FROM {}\n\n{}\n\n\nWORKDIR /src",
+            self.docker_base_name,
+            if self.is_debian_based.eq(&true) {
+                "ARG DEBIAN_FRONTEND=noninteractive"
+            } else {
+                ""
+            }
+        )
+    }
 
+    fn get_docker_build_and_runfile(&self) -> String {
+        let get_char_or_empty = |b: bool, s: &'tmp str| -> &'tmp str {
+            if b {
+                s
+            } else {
+                ""
+            }
+        };
 
-impl<'a> NewDockerProject<'a> {
+        let x11_nvidia_str = format!(
+            "{}{}",
+            get_char_or_empty(self.nvidia_runtime, "-n "),
+            get_char_or_empty(self.x11_support, "-x"),
+        );
+        format!(
+            r#"
 
-    pub fn new(
-        project_name: &'a str,
-        docker_base_name: &'a str,
-        x11_support: bool,
-        nvidia_runtime: bool,
-        is_debian_based: bool,
-    )
-    -> Self
-    {
+    source shell_utils/utils.sh
+
+    DOCKER_NAME=$(generate_docker_name)
+
+    clear &&\
+        echo "building $DOCKER_NAME" &&\
+        \
+        build_docker_fn "$DOCKER_NAME" || exit 1
+
+    run_docker_fn \
+        \
+        "\
+            bash \
+        "\
+        \
+        "\
+            -v '${{PWD}}/src':/src
+            --rm
+            --privileged
+            --name $PROJECT_FOLDER
+        "\
+        \
+        "$DOCKER_NAME" \
+        \
+        {}
+                "#,
+            x11_nvidia_str
+        )
+    }
+}
+
+impl<'a,'b> NewDockerProject<'a,'b> {
+    pub fn new(project_name: &'a str, docker_options: DockerOptions<'b>) -> Self {
+        let DockerOptions {
+            ref docker_base_name,
+            ..
+        } = &docker_options;
 
         NewDockerProject {
             project_name,
             docker_base_name,
-            docker_options:
-                DockerOptions {
-                    x11_support,
-                    nvidia_runtime,
-                    is_debian_based,
-                }
+            dockerfile_content: docker_options.get_dockerfile(),
+            docker_run_content: docker_options.get_docker_build_and_runfile(),
+            docker_options,
         }
     }
 
     pub fn bootstrap_docker_project(self, curr_dir: PathBuf) -> Result<(), Error> {
-
         ProjectDirectory(
             curr_dir,
             Directory(
@@ -57,165 +95,68 @@ impl<'a> NewDockerProject<'a> {
                 Some(Box::new([
                     PrjFile::Dir(Directory(
                         "src",
-                        Some(Box::new([
-                            PrjFile::DirFile(
-                                FilePrj::Code(
-                                    CodeFile(
-                                        TextFile(
-                                        "hello.sh",
-                                        "echo \"Hello World\""
-                                        )
-                                    )
-                                )
-                            ),
-                        ]))
+                        Some(Box::new([PrjFile::DirFile(FilePrj::Code(CodeFile(
+                            TextFile("hello.sh", "echo \"Hello World\""),
+                        )))])),
                     )),
-                    PrjFile::DirFile(self.get_docker_build_and_runfile()),
-                    PrjFile::DirFile(self.get_dockerfile()),
-                    PrjFile::Dir(self.get_docker_utils_dir()),
-                ]))
-            )
+                    PrjFile::DirFile(FilePrj::Code(CodeFile(TextFile(
+                        "run.sh",
+                        &self.docker_run_content,
+                    )))),
+                    PrjFile::DirFile(FilePrj::Code(CodeFile(TextFile(
+                        "Dockerfile",
+                        &self.dockerfile_content,
+                    )))),
+                    PrjFile::Dir(Directory(
+                        "shell_utils",
+                        Some(Box::new([
+                            PrjFile::DirFile(FilePrj::Code(CodeFile(TextFile(
+                                "utils.sh",
+                                r#"
+source ./shell_utils/get_container_name.sh
+source ./shell_utils/build_docker.sh
+source ./shell_utils/run_docker.sh
+                            "#,
+                            )))),
+                            PrjFile::DirFile(self.get_build_docker_util_file()),
+                            PrjFile::DirFile(self.get_run_docker_util_file()),
+                            PrjFile::DirFile(FilePrj::Code(CodeFile(TextFile(
+                                "get_container_name.sh",
+                                r#"
+
+    generate_docker_name () {
+        DOCKER_NAME=$(\
+            echo $PWD |\
+                cut -c2- |\
+                tr '[:upper:]' '[:lower:]' |\
+                sed "s/ /_/g;s/-/_/g;s/\//_/g;s/\.//g;"
+        )
+        DOCKER_NAME="$DOCKER_NAME:latest"
+        echo $DOCKER_NAME
+    }
+                            "#,
+                            )))),
+                        ])),
+                    )),
+                ])),
+            ),
         )
         .build()?;
 
         // eprintln!("EXECUTE BASH SCRIPT TO GO INSIDE PRJ FOLDER AND RUN run.sh");
 
-
         // use std::process::Command,
         //
         // Command::new("bash")
-            // .args(["./run.sh"])
-            // .output()
-            // .map(|_| ())
-
+        // .args(["./run.sh"])
+        // .output()
+        // .map(|_| ())
 
         Ok(())
-
     }
 
-
-    fn get_dockerfile(&self) -> FilePrj {
-
-        let non_int_debian_str =
-            if self.docker_options.is_debian_based
-            {
-                "ARG DEBIAN_FRONTEND=noninteractive"
-            }
-            else { "" };
-
-        FilePrj::Code(
-        CodeFile(
-            "Dockerfile",
-            format!(
-                "FROM {}\n\n{}\n\n\nWORKDIR /src",
-                self.docker_base_name,
-                non_int_debian_str
-            )
-        )
-        )
-    }
-
-
-
-    fn get_docker_utils_dir(&self) -> Directory {
-        Directory(
-            "shell_utils",
-            Some(Box::new([
-                PrjFile::DirFile(
-                    FilePrj::Code(
-                        CodeFile(
-                            TextFile(
-                            "utils.sh",
-                            r#"
-source ./shell_utils/get_container_name.sh
-source ./shell_utils/build_docker.sh
-source ./shell_utils/run_docker.sh
-                            "#
-                            )
-                        )
-                    )
-                ),
-                PrjFile::DirFile(self.get_build_docker_util_file()),
-                PrjFile::DirFile(self.get_run_docker_util_file()),
-                PrjFile::DirFile(
-                    CodeFile(
-                        "get_container_name.sh",
-                        r#"
-
-generate_docker_name () {
-    DOCKER_NAME=$(\
-        echo $PWD |\
-            cut -c2- |\
-            tr '[:upper:]' '[:lower:]' |\
-            sed "s/ /_/g;s/-/_/g;s/\//_/g;s/\.//g;"
-    )
-    DOCKER_NAME="$DOCKER_NAME:latest"
-    echo $DOCKER_NAME
-}
-                        "#.to_owned()
-                    )
-                ),
-            ]))
-        )
-    }
-
-
-    fn get_docker_build_and_runfile(&self) -> CodeFile {
-
-        let get_char_or_empty = |b: bool, s: &'a str| -> &'a str {
-            if b {
-                s
-            }
-            else {
-                ""
-            }
-        };
-
-        let x11_nvidia_str = format!(
-            "{}{}",
-            get_char_or_empty(self.docker_options.nvidia_runtime, "-n "),
-            get_char_or_empty(self.docker_options.x11_support, "-x"),
-        );
-
-        CodeFile(
-            "run.sh",
-            format!(r#"
-
-source shell_utils/utils.sh
-
-DOCKER_NAME=$(generate_docker_name)
-
-clear &&\
-    echo "building $DOCKER_NAME" &&\
-    \
-    build_docker_fn "$DOCKER_NAME" || exit 1
-
-run_docker_fn \
-    \
-    "\
-        bash \
-    "\
-    \
-    "\
-        -v '${{PWD}}/src':/src
-        --rm
-        --privileged
-        --name $PROJECT_FOLDER
-    "\
-    \
-    "$DOCKER_NAME" \
-    \
-    {}
-            "#,
-            x11_nvidia_str
-            ),
-            true
-        )
-    }
-
-
-    fn get_build_docker_util_file(&self) -> CodeFile {
-        CodeFile(
+    fn get_build_docker_util_file(&self) -> FilePrj {
+        FilePrj::Code(CodeFile(TextFile(
             "build_docker.sh",
             r#"
 
@@ -246,17 +187,14 @@ build_docker_fn () {
 
 }
 
-            "#.to_string(),
-            true
-        )
+            "#,
+        )))
     }
 
-
-    fn get_run_docker_util_file(&self) -> CodeFile {
-        FilePrj::Code(
-            CodeFile(
-                "run_docker.sh",
-                r#"
+    fn get_run_docker_util_file(&self) -> FilePrj {
+        FilePrj::Code(CodeFile(TextFile(
+            "run_docker.sh",
+            r#"
 
 run_docker_fn () {
 
@@ -380,11 +318,7 @@ $DOCKER_NAME \
     eval "$CMD"
 
 }
-                "#.to_string(),
-            false
-            )
-        )
+                "#,
+        )))
     }
-
-
 }

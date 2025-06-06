@@ -13,15 +13,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let nvidia_runtime = true;
     let is_debian_based = true;
 
-    let docker_prj = NewDockerProject::new(
+    NewDockerProject::new(
         project_name,
         docker_base_name,
         x11_support,
         nvidia_runtime,
         is_debian_based,
-    );
-
-    docker_prj.bootstrap_docker_project(curr_path)?;
+    )
+    .bootstrap_docker_project(curr_path)?;
 
     // eprintln!("ADD RC<STR> TO PROGRAM, INSTEAD OF COPY STRING (FOR IMMUTABLE CASES)");
     // eprintln!("ADD RC<[T]> TO PROGRAM, INSTEAD OF VECTOR COPYING (FOR IMMUTABLE CASES)");
