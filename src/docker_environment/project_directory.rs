@@ -7,22 +7,24 @@ use std::{
     },
     io::Error,
 };
-use std::io::Write;
 
-use crate::docker_environment::file::CodeFile;
+use crate::docker_environment::file::FilePrj;
+
+use super::file::CreateFile as _;
 
 
-pub struct Directory<'a>(
+
+pub struct Directory<'a,'b>(
     pub &'a str,
     pub Option<
             Box<
-                [PrjFile<'a>]
+                [PrjFile<'a,'b>]
             >
         >
 );
 
 
-impl<'a> Directory<'a> {
+impl<'a,'b> Directory<'a,'b> {
 
 
     fn create_directory(self, curr_folder: PathBuf) -> ()
@@ -62,30 +64,29 @@ impl<'a> Directory<'a> {
 }
 
 
-pub enum PrjFile<'a> {
-    Dir(Directory<'a>),
-    DirFile(CodeFile<'a>),
+pub enum PrjFile<'a,'b> {
+    Dir(Directory<'a,'b>),
+    DirFile(FilePrj<'a,'b>),
 }
 
 
-impl<'a> PrjFile<'a> {
+impl<'a,'b> PrjFile<'a,'b> {
 
-    pub fn create_file_blob(self, current_dir: PathBuf) -> () {
+    pub fn create_file_blob(self, current_dir: PathBuf) -> std::io::Result<()> {
         match self {
-
-            PrjFile::Dir(directory) => directory.create_directory(current_dir),
-            PrjFile::DirFile(code_file) => code_file.create_file(current_dir).expect("did not create file properly"),
+            PrjFile::Dir(directory) => Ok(directory.create_directory(current_dir)),
+            PrjFile::DirFile(file_prj) => file_prj.create_file(current_dir).map(|_| ())
         }
     }
 }
 
 
-pub struct ProjectDirectory<'a>(pub PathBuf, pub Directory<'a>);
+pub struct ProjectDirectory<'a,'b>(pub PathBuf, pub Directory<'a,'b>);
 
 
 
 
-impl<'a> ProjectDirectory<'a> {
+impl<'a,'b> ProjectDirectory<'a,'b> {
 
     pub fn build(self) -> Result<(), Error>
     {

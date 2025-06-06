@@ -15,11 +15,11 @@ use crate::docker_environment::{
         Directory,
         ProjectDirectory,
     },
-    file::CodeFile,
     project::DockerOptions,
 };
 
 
+use docker_environment::file::{CodeFile, FilePrj, TextFile};
 pub use docker_environment::project::NewDockerProject;
 
 
@@ -59,10 +59,13 @@ impl<'a> NewDockerProject<'a> {
                         "src",
                         Some(Box::new([
                             PrjFile::DirFile(
-                                CodeFile(
-                                    "hello.sh",
-                                    "echo \"Hello World\"".to_string(),
-                                    true
+                                FilePrj::Code(
+                                    CodeFile(
+                                        TextFile(
+                                        "hello.sh",
+                                        "echo \"Hello World\""
+                                        )
+                                    )
                                 )
                             ),
                         ]))
@@ -91,7 +94,7 @@ impl<'a> NewDockerProject<'a> {
     }
 
 
-    fn get_dockerfile(&self) -> CodeFile {
+    fn get_dockerfile(&self) -> FilePrj {
 
         let non_int_debian_str =
             if self.docker_options.is_debian_based
@@ -100,6 +103,7 @@ impl<'a> NewDockerProject<'a> {
             }
             else { "" };
 
+        FilePrj::Code(
         CodeFile(
             "Dockerfile",
             format!(
@@ -107,6 +111,7 @@ impl<'a> NewDockerProject<'a> {
                 self.docker_base_name,
                 non_int_debian_str
             )
+        )
         )
     }
 
@@ -117,13 +122,17 @@ impl<'a> NewDockerProject<'a> {
             "shell_utils",
             Some(Box::new([
                 PrjFile::DirFile(
-                    CodeFile(
-                        "utils.sh",
-                        r#"
+                    FilePrj::Code(
+                        CodeFile(
+                            TextFile(
+                            "utils.sh",
+                            r#"
 source ./shell_utils/get_container_name.sh
 source ./shell_utils/build_docker.sh
 source ./shell_utils/run_docker.sh
-                        "#.to_string()
+                            "#
+                            )
+                        )
                     )
                 ),
                 PrjFile::DirFile(self.get_build_docker_util_file()),
@@ -244,9 +253,10 @@ build_docker_fn () {
 
 
     fn get_run_docker_util_file(&self) -> CodeFile {
-        CodeFile(
-            "run_docker.sh",
-            r#"
+        FilePrj::Code(
+            CodeFile(
+                "run_docker.sh",
+                r#"
 
 run_docker_fn () {
 
@@ -370,8 +380,9 @@ $DOCKER_NAME \
     eval "$CMD"
 
 }
-            "#.to_string(),
-        false
+                "#.to_string(),
+            false
+            )
         )
     }
 
