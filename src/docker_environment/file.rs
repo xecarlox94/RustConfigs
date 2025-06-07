@@ -1,25 +1,25 @@
 use std::{fs::File, io::Write, path::PathBuf};
 
-pub enum FilePrj<'a, 'b> {
-    Text(TextFile<'a, 'b>),
-    Code(CodeFile<'a, 'b>),
+pub enum FilePrj {
+    Text(TextFile),
+    Code(CodeFile),
 }
 
 pub trait CreateFile {
     fn create_file(&self, current_dir: PathBuf) -> std::io::Result<File>;
 }
 
-impl<'a, 'b> CreateFile for FilePrj<'a, 'b> {
+impl CreateFile for FilePrj {
     fn create_file(&self, current_dir: PathBuf) -> std::io::Result<File> {
         self.create_file(current_dir)
     }
 }
 
-pub struct TextFile<'a, 'b>(pub &'a str, pub &'b str);
+pub struct TextFile(pub String, pub String);
 
-pub struct CodeFile<'a, 'b>(pub TextFile<'a, 'b>);
+pub struct CodeFile(pub TextFile);
 
-impl<'a, 'b> CreateFile for CodeFile<'a, 'b> {
+impl CreateFile for CodeFile {
     fn create_file(&self, current_dir: PathBuf) -> std::io::Result<File> {
         self.create_file(current_dir).and_then(|written_file| {
             written_file.metadata().map(|file_metata| {
@@ -35,7 +35,7 @@ impl<'a, 'b> CreateFile for CodeFile<'a, 'b> {
     }
 }
 
-impl<'a, 'b> CreateFile for TextFile<'a, 'b> {
+impl CreateFile for TextFile {
     fn create_file(&self, current_dir: PathBuf) -> std::io::Result<File> {
         let TextFile(ref file_name, ref content) = self;
 

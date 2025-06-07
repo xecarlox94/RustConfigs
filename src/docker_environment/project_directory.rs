@@ -14,17 +14,17 @@ use super::file::CreateFile as _;
 
 
 
-pub struct Directory<'a,'b>(
-    pub &'a str,
+pub struct Directory(
+    pub String,
     pub Option<
             Box<
-                [PrjFile<'a,'b>]
+                [PrjFile]
             >
         >
 );
 
 
-impl<'a,'b> Directory<'a,'b> {
+impl Directory {
 
 
     fn create_directory(self, curr_folder: PathBuf) -> ()
@@ -64,13 +64,13 @@ impl<'a,'b> Directory<'a,'b> {
 }
 
 
-pub enum PrjFile<'a,'b> {
-    Dir(Directory<'a,'b>),
-    DirFile(FilePrj<'a,'b>),
+pub enum PrjFile {
+    Dir(Directory),
+    DirFile(FilePrj),
 }
 
 
-impl<'a,'b> PrjFile<'a,'b> {
+impl PrjFile {
 
     pub fn create_file_blob(self, current_dir: PathBuf) -> std::io::Result<()> {
         match self {
@@ -81,12 +81,12 @@ impl<'a,'b> PrjFile<'a,'b> {
 }
 
 
-pub struct ProjectDirectory<'a,'b>(pub PathBuf, pub Directory<'a,'b>);
+pub struct ProjectDirectory(pub PathBuf, pub Directory);
 
 
 
 
-impl<'a,'b> ProjectDirectory<'a,'b> {
+impl ProjectDirectory {
 
     pub fn build(self) -> Result<(), Error>
     {

@@ -4,8 +4,8 @@ use rust_configs::DockerOptions;
 
 fn main() -> std::io::Result<()> {
     let docker_options = DockerOptions {
-        project_name: "sf",
-        docker_base_name: "ubuntu",
+        project_name: "sf".to_string(),
+        docker_base_name: "ubuntu".to_string(),
         x11_support: true,
         nvidia_runtime: true,
         is_debian_based: true,

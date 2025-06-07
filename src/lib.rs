@@ -4,30 +4,29 @@ mod docker_environment;
 
 use crate::docker_environment::project_directory::{Directory, PrjFile, ProjectDirectory};
 
-use docker_environment::{file::{CodeFile, FilePrj, TextFile}, project::NewDockerProject};
+use docker_environment::{
+    file::{CodeFile, FilePrj, TextFile},
+    project::NewDockerProject,
+};
 
 pub use docker_environment::project::DockerOptions;
 
-impl<'a,'b, 'tmp> DockerOptions<'a,'b> {
-
-
-    pub fn get_new_docker_project(self) -> NewDockerProject<'a,'b> {
+impl DockerOptions {
+    pub fn get_new_docker_project(self) -> NewDockerProject {
         let DockerOptions {
-            ref docker_base_name,
-            ref project_name,
+            docker_base_name,
+            project_name,
             ..
         } = &self;
 
         NewDockerProject {
-            project_name,
-            docker_base_name,
+            project_name: project_name.clone(),
+            docker_base_name: docker_base_name.clone(),
             dockerfile_content: self.get_dockerfile(),
             docker_run_content: self.get_docker_build_and_runfile(),
-            docker_options: self
+            docker_options: self,
         }
     }
-
-
 
     fn get_dockerfile(&self) -> String {
         format!(
@@ -42,18 +41,18 @@ impl<'a,'b, 'tmp> DockerOptions<'a,'b> {
     }
 
     fn get_docker_build_and_runfile(&self) -> String {
-        let get_char_or_empty = |b: bool, s: &'tmp str| -> &'tmp str {
+        let get_char_or_empty = |b: bool, s: String| -> String {
             if b {
                 s
             } else {
-                ""
+                "".to_string()
             }
         };
 
         let x11_nvidia_str = format!(
             "{}{}",
-            get_char_or_empty(self.nvidia_runtime, "-n "),
-            get_char_or_empty(self.x11_support, "-x"),
+            get_char_or_empty(self.nvidia_runtime, "-n ".to_string()),
+            get_char_or_empty(self.x11_support, "-x".to_string()),
         );
         format!(
             r#"
@@ -89,43 +88,49 @@ impl<'a,'b, 'tmp> DockerOptions<'a,'b> {
     }
 }
 
-impl<'a,'b> NewDockerProject<'a,'b> {
+impl NewDockerProject {
     pub fn bootstrap_docker_project(self, curr_dir: PathBuf) -> Result<(), Error> {
         ProjectDirectory(
             curr_dir,
             Directory(
-                "another_dir",
+                String::from("another_dir"),
                 Some(Box::new([
                     PrjFile::Dir(Directory(
-                        "src",
+                        String::from("src"),
                         Some(Box::new([PrjFile::DirFile(FilePrj::Code(CodeFile(
-                            TextFile("hello.sh", "echo \"Hello World\""),
+                            TextFile(
+                                String::from("hello.sh"),
+                                String::from("echo \"Hello World\""),
+                            ),
                         )))])),
                     )),
                     PrjFile::DirFile(FilePrj::Code(CodeFile(TextFile(
-                        "run.sh",
-                        &self.docker_run_content,
+                        String::from("run.sh"),
+                        self.docker_run_content.clone(),
                     )))),
                     PrjFile::DirFile(FilePrj::Code(CodeFile(TextFile(
-                        "Dockerfile",
-                        &self.dockerfile_content,
+                        String::from("Dockerfile"),
+                        self.dockerfile_content.clone(),
                     )))),
                     PrjFile::Dir(Directory(
-                        "shell_utils",
+                        String::from("shell_utils"),
                         Some(Box::new([
                             PrjFile::DirFile(FilePrj::Code(CodeFile(TextFile(
-                                "utils.sh",
-                                r#"
+                                String::from("utils.sh"),
+                                String::from(
+                                    r#"
 source ./shell_utils/get_container_name.sh
 source ./shell_utils/build_docker.sh
 source ./shell_utils/run_docker.sh
                             "#,
+                                ),
                             )))),
                             PrjFile::DirFile(self.get_build_docker_util_file()),
                             PrjFile::DirFile(self.get_run_docker_util_file()),
                             PrjFile::DirFile(FilePrj::Code(CodeFile(TextFile(
-                                "get_container_name.sh",
-                                r#"
+                                String::from("get_container_name.sh"),
+                                String::from(
+                                    r#"
 
     generate_docker_name () {
         DOCKER_NAME=$(\
@@ -138,6 +143,7 @@ source ./shell_utils/run_docker.sh
         echo $DOCKER_NAME
     }
                             "#,
+                                ),
                             )))),
                         ])),
                     )),
@@ -160,8 +166,9 @@ source ./shell_utils/run_docker.sh
 
     fn get_build_docker_util_file(&self) -> FilePrj {
         FilePrj::Code(CodeFile(TextFile(
-            "build_docker.sh",
-            r#"
+            String::from("build_docker.sh"),
+            String::from(
+                r#"
 
 build_docker_fn () {
 
@@ -191,13 +198,15 @@ build_docker_fn () {
 }
 
             "#,
+            ),
         )))
     }
 
     fn get_run_docker_util_file(&self) -> FilePrj {
         FilePrj::Code(CodeFile(TextFile(
-            "run_docker.sh",
-            r#"
+            String::from("run_docker.sh"),
+            String::from(
+                r#"
 
 run_docker_fn () {
 
@@ -322,6 +331,7 @@ $DOCKER_NAME \
 
 }
                 "#,
+            ),
         )))
     }
 }
