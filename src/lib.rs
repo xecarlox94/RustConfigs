@@ -2,15 +2,33 @@ use std::{io::Error, path::PathBuf};
 
 mod docker_environment;
 
-use crate::docker_environment::{
-    project::DockerOptions,
-    project_directory::{Directory, PrjFile, ProjectDirectory},
-};
+use crate::docker_environment::project_directory::{Directory, PrjFile, ProjectDirectory};
 
-use docker_environment::file::{CodeFile, FilePrj, TextFile};
-pub use docker_environment::project::NewDockerProject;
+use docker_environment::{file::{CodeFile, FilePrj, TextFile}, project::NewDockerProject};
 
-impl<'a, 'tmp> DockerOptions<'a> {
+pub use docker_environment::project::DockerOptions;
+
+impl<'a,'b, 'tmp> DockerOptions<'a,'b> {
+
+
+    pub fn get_new_docker_project(self) -> NewDockerProject<'a,'b> {
+        let DockerOptions {
+            ref docker_base_name,
+            ref project_name,
+            ..
+        } = &self;
+
+        NewDockerProject {
+            project_name,
+            docker_base_name,
+            dockerfile_content: self.get_dockerfile(),
+            docker_run_content: self.get_docker_build_and_runfile(),
+            docker_options: self
+        }
+    }
+
+
+
     fn get_dockerfile(&self) -> String {
         format!(
             "FROM {}\n\n{}\n\n\nWORKDIR /src",
@@ -72,21 +90,6 @@ impl<'a, 'tmp> DockerOptions<'a> {
 }
 
 impl<'a,'b> NewDockerProject<'a,'b> {
-    pub fn new(project_name: &'a str, docker_options: DockerOptions<'b>) -> Self {
-        let DockerOptions {
-            ref docker_base_name,
-            ..
-        } = &docker_options;
-
-        NewDockerProject {
-            project_name,
-            docker_base_name,
-            dockerfile_content: docker_options.get_dockerfile(),
-            docker_run_content: docker_options.get_docker_build_and_runfile(),
-            docker_options,
-        }
-    }
-
     pub fn bootstrap_docker_project(self, curr_dir: PathBuf) -> Result<(), Error> {
         ProjectDirectory(
             curr_dir,
