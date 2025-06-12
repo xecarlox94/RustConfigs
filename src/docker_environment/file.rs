@@ -1,5 +1,6 @@
 use std::{fs::File, io::Write, path::PathBuf};
 
+#[derive(Debug)]
 pub enum FilePrj {
     Text(TextFile),
     Code(CodeFile),
@@ -11,23 +12,27 @@ pub trait CreateFile {
 
 impl CreateFile for FilePrj {
     fn create_file(&self, current_dir: PathBuf) -> std::io::Result<File> {
-        self.create_file(current_dir)
+        match self {
+            FilePrj::Text(text_file) => text_file.create_file(current_dir),
+            FilePrj::Code(code_file) => code_file.create_file(current_dir),
+        }
     }
 }
 
+#[derive(Debug)]
 pub struct TextFile(pub String, pub String);
 
+#[derive(Debug)]
 pub struct CodeFile(pub TextFile);
 
 impl CreateFile for CodeFile {
     fn create_file(&self, current_dir: PathBuf) -> std::io::Result<File> {
-        self.create_file(current_dir).and_then(|written_file| {
+        self.0.create_file(current_dir).and_then(|written_file| {
             written_file.metadata().map(|file_metata| {
                 use std::os::unix::fs::PermissionsExt as _;
 
                 // TODO: verify if this is correct!!!
-
-                file_metata.permissions().set_mode(755u32);
+                // file_metata.permissions().set_mode(755u32);
 
                 written_file
             })

@@ -11,17 +11,17 @@ use docker_environment::{
 
 pub use docker_environment::project::DockerOptions;
 
-impl DockerOptions {
-    pub fn get_new_docker_project(self) -> NewDockerProject {
+impl<'d, 'dockerfile, 'prj_name, 'base_name> DockerOptions<'prj_name, 'base_name> {
+    pub fn get_new_docker_project(&'d self) -> NewDockerProject<'d, 'prj_name, 'base_name> {
         let DockerOptions {
             docker_base_name,
             project_name,
             ..
-        } = &self;
+        } = self;
 
         NewDockerProject {
-            project_name: project_name.clone(),
-            docker_base_name: docker_base_name.clone(),
+            project_name,
+            docker_base_name,
             dockerfile_content: self.get_dockerfile(),
             docker_run_content: self.get_docker_build_and_runfile(),
             docker_options: self,
@@ -88,7 +88,7 @@ impl DockerOptions {
     }
 }
 
-impl NewDockerProject {
+impl<'d, 'prj_name, 'base_name> NewDockerProject<'d, 'prj_name, 'base_name> {
     pub fn bootstrap_docker_project(self, curr_dir: PathBuf) -> Result<(), Error> {
         ProjectDirectory(
             curr_dir,
@@ -150,7 +150,7 @@ source ./shell_utils/run_docker.sh
                 ])),
             ),
         )
-        .build()?;
+        .build()
 
         // eprintln!("EXECUTE BASH SCRIPT TO GO INSIDE PRJ FOLDER AND RUN run.sh");
 
@@ -160,8 +160,6 @@ source ./shell_utils/run_docker.sh
         // .args(["./run.sh"])
         // .output()
         // .map(|_| ())
-
-        Ok(())
     }
 
     fn get_build_docker_util_file(&self) -> FilePrj {
