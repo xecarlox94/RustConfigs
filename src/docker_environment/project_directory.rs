@@ -3,7 +3,6 @@ use std::{
     io::Error,
     path::PathBuf,
 };
-use nonempty::NonEmpty;
 
 use crate::docker_environment::file::FilePrj;
 
@@ -13,44 +12,32 @@ use super::file::CreateFile as _;
 pub struct Directory(pub String, pub Option<Box<[PrjFile]>>);
 
 impl Directory {
-    fn create_directory(self, curr_folder: PathBuf) -> Result<(), String> {
+    fn create_directory(&self, curr_folder: PathBuf) -> std::io::Result<()> {
         let Directory(dir_name, maybe_box_dir_contents) = self;
 
         let mut new_dir = curr_folder.clone();
         new_dir.push(dir_name);
 
-        create_dir(&new_dir).map_err(|e| e.to_string()).and(
-            match maybe_box_dir_contents
-                .ok_or(Err(String::from("Directory")))
-                .map(|box_dir_contents| {
-                    NonEmpty::from_vec(
-                    box_dir_contents
-                        .into_iter()
-                        .map(|p_file| p_file.create_file_blob(new_dir.clone()))
-                        .filter_map(|v| match v {
-                            Ok(_) => None,
-                            Err(e) => Some(e),
-                        })
-                        .collect()
-                    )
-                    .ok_or(Err(String::from("Directory")))
+        create_dir(&new_dir).map_err(|e| e.to_string()); // FIX: handle this error
 
-                    errors
-                        .into_iter()
-                        .map::<String, fn(_) -> String>(|e| e.to_string())
-                        .reduce(|acc_msg: String, item_msg| {
-                            acc_msg + "\nError: " + item_msg.as_str()
-                        })
-                }) {
-                    Ok(ok) => ok,
-                    Ok(ok) => ok,
-                    Err(err) => Err(err),
-                },
-        )
+        maybe_box_dir_contents
+            .as_ref()
+            .map(|box_dir_contents| {
+                box_dir_contents
+                    .iter()
+                    .map(|p_file| p_file.create_file_blob(new_dir.clone()))
+                    .filter_map(|v| match v {
+                        Ok(_) => None,
+                        Err(e) => Some(e), // FIX: fix error handling in this region
+                    })
+                    .collect::<Vec<_>>()
+            });
+
+        Ok(())
     }
 
     fn get_dirname_str(&self) -> String {
-        let Directory(dir_name, _): &Directory = self;
+        let Directory(dir_name, _) = self;
 
         dir_name.to_string()
     }
@@ -63,9 +50,9 @@ pub enum PrjFile {
 }
 
 impl PrjFile {
-    pub fn create_file_blob(self, current_dir: PathBuf) -> std::io::Result<()> {
+    pub fn create_file_blob(&self, current_dir: PathBuf) -> std::io::Result<()> {
         match self {
-            PrjFile::Dir(directory) => Ok(directory.create_directory(current_dir)),
+            PrjFile::Dir(directory) => directory.create_directory(current_dir),
             PrjFile::DirFile(file_prj) => file_prj.create_file(current_dir).map(|_| ()),
         }
     }
@@ -74,7 +61,7 @@ impl PrjFile {
 pub struct ProjectDirectory(pub PathBuf, pub Directory);
 
 impl ProjectDirectory {
-    pub fn build(self) -> Result<(), Error> {
+    pub fn build(self) -> std::io::Result<()> {
         eprintln!("change this current dir to an immutable directory, use pointers!!!!");
 
         let ProjectDirectory(current_path, directory) = self;
@@ -91,6 +78,6 @@ impl ProjectDirectory {
             Ok(false) => (),
         };
 
-        Ok(directory.create_directory(current_path))
+        directory.create_directory(current_path)
     }
 }
