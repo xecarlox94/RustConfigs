@@ -12,6 +12,8 @@ fn main() -> std::io::Result<()> {
             is_debian_based: true,
         };
 
+        eprintln!("ADD CLAP for user interface");
+
         docker_options
             .get_new_docker_project()
             .bootstrap_docker_project(current_dir)
