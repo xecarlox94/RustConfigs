@@ -28,11 +28,12 @@ pub struct CodeFile(pub TextFile);
 impl CreateFile for CodeFile {
     fn create_file(&self, current_dir: PathBuf) -> std::io::Result<File> {
         self.0.create_file(current_dir).and_then(|written_file| {
-            written_file.metadata().map(|file_metata| {
+            written_file.metadata().map(|mut file_metata| {
                 use std::os::unix::fs::PermissionsExt as _;
 
-                // TODO: verify if this is correct!!!
-                // file_metata.permissions().set_mode(755u32);
+                dbg!(&file_metata);
+
+                file_metata.permissions().set_mode(755u32);
 
                 written_file
             })
