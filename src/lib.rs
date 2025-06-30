@@ -75,12 +75,13 @@ impl<'d, 'dockerfile, 'prj_name, 'base_name> DockerOptions<'prj_name, 'base_name
             -v '${{PWD}}/src':/src \
             --rm \
             --privileged \
-            --name $PROJECT_FOLDER \
+            --name {} \
         "\
         \
         "$DOCKER_NAME" \
         \
         {}"#,
+            self.project_name,
             x11_nvidia_str
         )
     }

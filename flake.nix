@@ -29,7 +29,7 @@
           pname = "rust-configs";
           version = "0.1.0";
 
-          src = ./.; 
+          src = ./.;
 
           cargoLock = {
             lockFile = ./Cargo.lock;  # Ensures reproducibility
@@ -43,7 +43,7 @@
 
         devShells = {
           default = pkgs.mkShell {
-            buildInputs = buildInputs;
+            buildInputs = buildInputs ++ [ pkgs.xorg.xhost ];
 
             shellHook = ''
               alias find=fd
