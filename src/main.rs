@@ -8,7 +8,7 @@ fn main() -> std::io::Result<()> {
             project_name: "sf",
             docker_base_name: "ubuntu",
             x11_support: true,
-            nvidia_runtime: true,
+            nvidia_runtime: false,
             is_debian_based: true,
         };
 

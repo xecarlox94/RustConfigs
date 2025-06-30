@@ -61,28 +61,26 @@ impl<'d, 'dockerfile, 'prj_name, 'base_name> DockerOptions<'prj_name, 'base_name
 
     DOCKER_NAME=$(generate_docker_name)
 
-    clear &&\\
-        echo "building $DOCKER_NAME" &&\\
-        \\
+    clear &&\
+        echo "building $DOCKER_NAME" &&\
         build_docker_fn "$DOCKER_NAME" || exit 1
 
-    run_docker_fn \\
-        \\
-        "\\
-            bash \\
-        "\\
-        \\
-        "\\
-            -v '${{PWD}}/src':/src \\
-            --rm \\
-            --privileged \\
-            --name $PROJECT_FOLDER \\
-        "\\
-        \\
-        "$DOCKER_NAME" \\
-        \\
-        {}
-                "#,
+    run_docker_fn \
+        \
+        "\
+            bash \
+        "\
+        \
+        "\
+            -v '${{PWD}}/src':/src \
+            --rm \
+            --privileged \
+            --name $PROJECT_FOLDER \
+        "\
+        \
+        "$DOCKER_NAME" \
+        \
+        {}"#,
             x11_nvidia_str
         )
     }
@@ -249,45 +247,37 @@ run_docker_fn () {
 
 
     # # --- Pulse Audio / Mic and Speakers - Too much to comment, but it's all needed... I think ----------------------
-    #     -v /dev/snd:/dev/snd  \\
-    #     -v /run/user/$uid/puslse:/run/user/$uid/pulse \\
-    #     -v /dev/shm:/dev/shm \\
-    #     -v /etc/machine-id:/etc/machine-id \\
-    #     -v /var/lib/dbus:/var/lib/dbus \\
-    #     -v ~/.pulse:/home/$dockerUsername/.pulse \\
-    #     -v ~/.config/pulse/cookie:/root/.config/pulse/cookie \\
-    #     -e PULSE_SERVER=unix:${XDG_RUNTIME_DIR}/pulse/native \\
-    #     -v /dev/bus/usb:/dev/bus/usb \\
-    #     -v ${XDG_RUNTIME_DIR}/pulse/native:${XDG_RUNTIME_DIR}/pulse/native \\
-    #     --device /dev/snd \\
+    #     -v /dev/snd:/dev/snd  \
+    #     -v /run/user/$uid/puslse:/run/user/$uid/pulse \
+    #     -v /dev/shm:/dev/shm \
+    #     -v /etc/machine-id:/etc/machine-id \
+    #     -v /var/lib/dbus:/var/lib/dbus \
+    #     -v ~/.pulse:/home/$dockerUsername/.pulse \
+    #     -v ~/.config/pulse/cookie:/root/.config/pulse/cookie \
+    #     -e PULSE_SERVER=unix:${XDG_RUNTIME_DIR}/pulse/native \
+    #     -v /dev/bus/usb:/dev/bus/usb \
+    #     -v ${XDG_RUNTIME_DIR}/pulse/native:${XDG_RUNTIME_DIR}/pulse/native \
+    #     --device /dev/snd \
     # # ----------------------------
 
 
     # USER PERMISSION
     # https://vsupalov.com/docker-shared-permissions/
-    # --user \"$(id -u):$(id -g)\" \\
-
-
-    #-e TERM \\
-        #-e QT_X11_NO_MITSHM=1 \\
-        #-e XAUTHORITY=/tmp/.dockerw_b717qf.xauth \\
-        #-v /tmp/.dockerw_b717qf.xauth:/tmp/.dockerw_b717qf.xauth \\
-        #-v /tmp/.X11-unix:/tmp/.X11-unix \\
+    # --user \"$(id -u):$(id -g)\" \
 
 
 
-
-    X11_OPTS="\\
-    -e TERM \\
-    -e DISPLAY=unix$DISPLAY \\
-    -v /tmp/.X11-unix:/tmp/.X11-unix:rw \\
+    X11_OPTS="\
+    -e TERM \
+    -e DISPLAY=unix$DISPLAY \
+    -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
     "
 
-    NVIDIA_OPTS="\\
-    -e NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all} \\
-    -e NVIDIA_DRIVER_CAPABILITIES=${NVIDIA_DRIVER_CAPABILITIES:-all} \\
-    --runtime=nvidia \\
-    --gpus all \\
+    NVIDIA_OPTS="\
+    -e NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all} \
+    -e NVIDIA_DRIVER_CAPABILITIES=${NVIDIA_DRIVER_CAPABILITIES:-all} \
+    --runtime=nvidia \
+    --gpus all \
     "
 
 
@@ -307,25 +297,21 @@ run_docker_fn () {
         ADD_OPTS="$ADD_OPTS $NVIDIA_OPTS"
     fi
 
-    CMD="\\
-sudo docker run \\
--it \\
-$DOCKER_NAME \\
+    CMD="\
+$XHOST \
+sudo docker run \
+-it \
+$DOCKER_ARGS \
+$ADD_OPTS \
+$DOCKER_NAME \
+$RUN_CMD \
     "
 
-    #CMD="\\
-#$XHOST \\
-#sudo docker run \\
-#-it \\
-#$DOCKER_ARGS \\
-#$ADD_OPTS \\
-#$DOCKER_NAME \\
-#$RUN_CMD \\
-    #"
-
+    clear
+    echo "$CMD"
     echo "$CMD" > .command_executed.sh
 
-    # eval "$CMD"
+    eval "$CMD"
 
 }
                 "#,
