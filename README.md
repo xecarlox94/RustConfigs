@@ -1,6 +1,14 @@
 # Rust_configs
 
 
+Simple bash templating program to run docker in a sane manner.
+
+
+## Requirements
+
+You have to install the Nix package manager and enable the "flake" and "commands" experimental features.
+
+
 
 [Install nix and enable nix flake](https://dev.to/arnu515/getting-started-with-nix-and-nix-flakes-mml)
 
