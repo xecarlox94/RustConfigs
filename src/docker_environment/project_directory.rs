@@ -61,7 +61,7 @@ pub struct ProjectDirectory(pub PathBuf, pub Directory);
 
 impl ProjectDirectory {
     pub fn build(self) -> std::io::Result<()> {
-        eprintln!("change this current dir to an immutable directory, use pointers!!!!");
+        // eprintln!("change this current dir to an immutable directory, use pointers!!!!");
 
         let ProjectDirectory(current_path, directory) = self;
 

@@ -61,6 +61,6 @@ fn main() -> std::io::Result<()> {
             // eprintln!("wrapper for creating bash files with shebangs");
             // eprintln!("Run the initial run.sh command");
         }
-        _ => panic!("ERROR"),
+        _ => panic!("Please read the help manual :)"),
     }
 }
