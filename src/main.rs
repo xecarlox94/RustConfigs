@@ -50,18 +50,15 @@ fn main() -> std::io::Result<()> {
                 is_debian_based: matches.get_flag("debian_support"),
             };
 
-            env::current_dir().and_then(|current_dir| {
-                eprintln!("FIX file executable issue");
-
+            env::current_dir().and_then(|current_dir|
                 docker_options
                     .get_new_docker_project()
                     .bootstrap_docker_project(current_dir)
-            })
+            )
 
             // eprintln!("ADD RC<STR> TO PROGRAM, INSTEAD OF COPY STRING (FOR IMMUTABLE CASES)");
             // eprintln!("ADD RC<[T]> TO PROGRAM, INSTEAD OF VECTOR COPYING (FOR IMMUTABLE CASES)");
             // eprintln!("wrapper for creating bash files with shebangs");
-            // eprintln!("functon to create executable bash files");
             // eprintln!("Run the initial run.sh command");
         }
         _ => panic!("ERROR"),

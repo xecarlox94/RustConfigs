@@ -1,4 +1,4 @@
-use std::{fs::File, io::Write, path::PathBuf};
+use std::{fs::File, io::Write, os::unix::fs::PermissionsExt, path::PathBuf};
 
 #[derive(Debug)]
 pub enum DirFile {
@@ -28,16 +28,14 @@ pub struct Code(pub Text);
 impl CreateFile for Code {
     fn create_file(&self, current_dir: PathBuf) -> std::io::Result<File> {
         self.0.create_file(current_dir).and_then(|mut written_file| {
-            written_file.metadata().map(|mut file_metata| {
+            written_file.metadata().map(|file_metata| {
                 use std::os::unix::fs::PermissionsExt as _;
 
-                // FIX: make executable
-                //
-                // dbg!(&self);
-                // dbg!(&file_metata);
-                eprintln!("CORRECT THIS FUNCTION");
+                let mut perms = file_metata.permissions();
 
-                file_metata.permissions().set_mode(755u32);
+                perms.set_mode(0o755);
+
+                let v = written_file.set_permissions(perms);
 
                 written_file
             })

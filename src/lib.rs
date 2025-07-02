@@ -107,14 +107,14 @@ impl<'d, 'prj_name, 'base_name> NewDockerProject<'d, 'prj_name, 'base_name> {
                         String::from("run.sh"),
                         self.docker_run_content.clone(),
                     )))),
-                    Blob::Leaf(DirFile::Exec(Code(Text(
+                    Blob::Leaf(DirFile::Doc(Text(
                         String::from("Dockerfile"),
                         self.dockerfile_content.clone(),
-                    )))),
+                    ))),
                     Blob::Branch(Directory(
                         String::from("shell_utils"),
                         Some(Box::new([
-                            Blob::Leaf(DirFile::Exec(Code(Text(
+                            Blob::Leaf(DirFile::Doc(Text(
                                 String::from("utils.sh"),
                                 String::from(
                                     r#"
@@ -123,10 +123,10 @@ source ./shell_utils/build_docker.sh
 source ./shell_utils/run_docker.sh
                             "#,
                                 ),
-                            )))),
+                            ))),
                             Blob::Leaf(self.get_build_docker_util_file()),
                             Blob::Leaf(self.get_run_docker_util_file()),
-                            Blob::Leaf(DirFile::Exec(Code(Text(
+                            Blob::Leaf(DirFile::Doc(Text(
                                 String::from("get_container_name.sh"),
                                 String::from(
                                     r#"
@@ -143,7 +143,7 @@ source ./shell_utils/run_docker.sh
     }
                             "#,
                                 ),
-                            )))),
+                            ))),
                         ])),
                     )),
                 ])),
@@ -162,7 +162,7 @@ source ./shell_utils/run_docker.sh
     }
 
     fn get_build_docker_util_file(&self) -> DirFile {
-        DirFile::Exec(Code(Text(
+        DirFile::Doc(Text(
             String::from("build_docker.sh"),
             String::from(
                 r#"
@@ -196,11 +196,11 @@ build_docker_fn () {
 
             "#,
             ),
-        )))
+        ))
     }
 
     fn get_run_docker_util_file(&self) -> DirFile {
-        DirFile::Exec(Code(Text(
+        DirFile::Doc(Text(
             String::from("run_docker.sh"),
             String::from(
                 r#"
@@ -317,6 +317,6 @@ $RUN_CMD \
 }
                 "#,
             ),
-        )))
+        ))
     }
 }

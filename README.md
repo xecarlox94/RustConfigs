@@ -33,3 +33,9 @@ Common example command to bootstrap a simple program.
 ```bash
 nix run github:xecarlox94/RustConfigs -- --project new --base_image ubuntu -n -d -x
 ```
+
+To run the docker container
+
+```bash
+cd new && ./run.sh
+```
