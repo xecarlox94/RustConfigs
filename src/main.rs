@@ -7,25 +7,32 @@ use rust_configs::DockerOptions;
 fn main() -> std::io::Result<()> {
     let matches = command!()
         .propagate_version(true)
+        .before_help("Welcome!!")
+        .about("Simple utility to bootstrap custom docker environment. I hate Docker so I created a simple program to make it usable. Using Rust is a overkill to template bash scripts but I wanted to learn it. It was fun :)")
+        .after_help("Enjoy it!")
+        .author("Jose Fernandes, jf94.uk@gmail.com")
         .arg_required_else_help(true)
         .arg(arg!(-p --project <PROJECT> "Sets project name").required(true))
         .arg(arg!(-b --base_image <BASE_IMAGE> "Sets default docker base image").required(true))
         .arg(
             Arg::new("x11_support")
                 .short('x')
-                .long("adds support for x11 desktop application integration")
+                .long("x11")
+                .help("adds support for x11 desktop application integration")
                 .action(ArgAction::SetTrue),
         )
         .arg(
             Arg::new("nvidia_support")
                 .short('n')
-                .long("adds support to nvidia applications")
+                .long("nvidia")
+                .help("adds support to nvidia applications")
                 .action(ArgAction::SetTrue),
         )
         .arg(
             Arg::new("debian_support")
                 .short('d')
-                .long("adds support for debian based docker images")
+                .long("debian")
+                .help("adds support for debian based docker images")
                 .action(ArgAction::SetTrue),
         )
         .get_matches();

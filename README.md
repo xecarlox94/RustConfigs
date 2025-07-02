@@ -7,12 +7,21 @@
 
 
 ## Test instalation
+
+
+Please run this before running anyother command!
+
+
 ```bash
 nix run github:xecarlox94/RustConfigs -- --help
 ```
 
-## Run Program
+## Example Run Program
+
+
+Common example command to bootstrap a simple program.
+
 
 ```bash
-nix run github:xecarlox94/RustConfigs --
+nix run github:xecarlox94/RustConfigs -- --project new --base_image ubuntu -n -d -x
 ```
