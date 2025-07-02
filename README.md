@@ -39,3 +39,19 @@ To run the docker container
 ```bash
 cd new && ./run.sh
 ```
+
+
+## Usage
+
+
+To ease the command execution, move this alias to your bashrc file.
+
+```bash
+alias init_docker_project='nix run github:xecarlox94/RustConfigs --'
+```
+
+Then run it like this:
+
+```bash
+init_docker_project --project another_project --base_image ubuntu -n -d -x
+```
