@@ -2,10 +2,10 @@ use std::{io::Error, path::PathBuf};
 
 mod docker_environment;
 
-use crate::docker_environment::project_directory::{Directory, PrjFile, ProjectDirectory};
+use crate::docker_environment::project_directory::{Directory, Blob, ProjectDirectory};
 
 use docker_environment::{
-    file::{CodeFile, FilePrj, TextFile},
+    file::{Code, DirFile, Text},
     project::NewDockerProject,
 };
 
@@ -92,29 +92,29 @@ impl<'d, 'prj_name, 'base_name> NewDockerProject<'d, 'prj_name, 'base_name> {
         ProjectDirectory(
             curr_dir,
             Directory(
-                String::from("another_dir"),
+                String::from(self.project_name),
                 Some(Box::new([
-                    PrjFile::Dir(Directory(
+                    Blob::Branch(Directory(
                         String::from("src"),
-                        Some(Box::new([PrjFile::DirFile(FilePrj::Code(CodeFile(
-                            TextFile(
+                        Some(Box::new([Blob::Leaf(DirFile::Exec(Code(
+                            Text(
                                 String::from("hello.sh"),
                                 String::from("echo \"Hello World\""),
                             ),
                         )))])),
                     )),
-                    PrjFile::DirFile(FilePrj::Code(CodeFile(TextFile(
+                    Blob::Leaf(DirFile::Exec(Code(Text(
                         String::from("run.sh"),
                         self.docker_run_content.clone(),
                     )))),
-                    PrjFile::DirFile(FilePrj::Code(CodeFile(TextFile(
+                    Blob::Leaf(DirFile::Exec(Code(Text(
                         String::from("Dockerfile"),
                         self.dockerfile_content.clone(),
                     )))),
-                    PrjFile::Dir(Directory(
+                    Blob::Branch(Directory(
                         String::from("shell_utils"),
                         Some(Box::new([
-                            PrjFile::DirFile(FilePrj::Code(CodeFile(TextFile(
+                            Blob::Leaf(DirFile::Exec(Code(Text(
                                 String::from("utils.sh"),
                                 String::from(
                                     r#"
@@ -124,9 +124,9 @@ source ./shell_utils/run_docker.sh
                             "#,
                                 ),
                             )))),
-                            PrjFile::DirFile(self.get_build_docker_util_file()),
-                            PrjFile::DirFile(self.get_run_docker_util_file()),
-                            PrjFile::DirFile(FilePrj::Code(CodeFile(TextFile(
+                            Blob::Leaf(self.get_build_docker_util_file()),
+                            Blob::Leaf(self.get_run_docker_util_file()),
+                            Blob::Leaf(DirFile::Exec(Code(Text(
                                 String::from("get_container_name.sh"),
                                 String::from(
                                     r#"
@@ -161,8 +161,8 @@ source ./shell_utils/run_docker.sh
         // .map(|_| ())
     }
 
-    fn get_build_docker_util_file(&self) -> FilePrj {
-        FilePrj::Code(CodeFile(TextFile(
+    fn get_build_docker_util_file(&self) -> DirFile {
+        DirFile::Exec(Code(Text(
             String::from("build_docker.sh"),
             String::from(
                 r#"
@@ -199,8 +199,8 @@ build_docker_fn () {
         )))
     }
 
-    fn get_run_docker_util_file(&self) -> FilePrj {
-        FilePrj::Code(CodeFile(TextFile(
+    fn get_run_docker_util_file(&self) -> DirFile {
+        DirFile::Exec(Code(Text(
             String::from("run_docker.sh"),
             String::from(
                 r#"

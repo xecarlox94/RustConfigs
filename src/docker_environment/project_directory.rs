@@ -4,12 +4,11 @@ use std::{
     path::PathBuf,
 };
 
-use crate::docker_environment::file::FilePrj;
 
-use super::file::CreateFile as _;
+use super::file::{CreateFile as _, DirFile};
 
 #[derive(Debug)]
-pub struct Directory(pub String, pub Option<Box<[PrjFile]>>);
+pub struct Directory(pub String, pub Option<Box<[Blob]>>);
 
 impl Directory {
     fn create_directory(&self, curr_folder: PathBuf) -> std::io::Result<()> {
@@ -44,16 +43,16 @@ impl Directory {
 }
 
 #[derive(Debug)]
-pub enum PrjFile {
-    Dir(Directory),
-    DirFile(FilePrj),
+pub enum Blob {
+    Branch(Directory),
+    Leaf(DirFile)
 }
 
-impl PrjFile {
+impl Blob {
     pub fn create_file_blob(&self, current_dir: PathBuf) -> std::io::Result<()> {
         match self {
-            PrjFile::Dir(directory) => directory.create_directory(current_dir),
-            PrjFile::DirFile(file_prj) => file_prj.create_file(current_dir).map(|_| ()),
+            Blob::Branch(directory) => directory.create_directory(current_dir),
+            Blob::Leaf(file_prj) => file_prj.create_file(current_dir).map(|_| ()),
         }
     }
 }
