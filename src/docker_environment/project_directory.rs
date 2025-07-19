@@ -3,13 +3,12 @@ use std::{
     path::PathBuf,
 };
 
-
-use super::file::{CreateFile as _, DirFile};
+use super::file::DirFile;
 
 #[derive(Debug)]
-pub struct Directory(pub String, pub Option<Box<[Blob]>>);
+pub struct Directory<'a>(pub String, pub Box<[Blob<'a>]>);
 
-impl Directory {
+impl<'a> Directory<'a> {
     fn create_directory(&self, curr_folder: PathBuf) -> std::io::Result<()> {
         let Directory(dir_name, maybe_box_dir_contents) = self;
 
@@ -19,17 +18,13 @@ impl Directory {
         create_dir(&new_dir).map_err(|e| e.to_string()); // FIX: handle this error
 
         maybe_box_dir_contents
-            .as_ref()
-            .map(|box_dir_contents| {
-                box_dir_contents
-                    .iter()
-                    .map(|p_file| p_file.create_file_blob(new_dir.clone()))
-                    .filter_map(|v| match v {
-                        Ok(_) => None,
-                        Err(e) => Some(e), // FIX: fix error handling in this region
-                    })
-                    .collect::<Vec<_>>()
-            });
+            .iter()
+            .map(|p_file| p_file.create_file_blob(new_dir.clone()))
+            .filter_map(|v| match v {
+                Ok(_) => None,
+                Err(e) => Some(e), // FIX: fix error handling in this region
+            })
+            .collect::<Vec<_>>();
 
         Ok(())
     }
@@ -42,23 +37,23 @@ impl Directory {
 }
 
 #[derive(Debug)]
-pub enum Blob {
-    Branch(Directory),
-    Leaf(DirFile)
+pub enum Blob<'a> {
+    Branch(Directory<'a>),
+    Leaf(DirFile<'a>),
 }
 
-impl Blob {
+impl<'a> Blob<'a> {
     pub fn create_file_blob(&self, current_dir: PathBuf) -> std::io::Result<()> {
         match self {
             Blob::Branch(directory) => directory.create_directory(current_dir),
-            Blob::Leaf(file_prj) => file_prj.create_file(current_dir).map(|_| ()),
+            Blob::Leaf(file_prj) => file_prj.write_file(current_dir).map(|_| ()),
         }
     }
 }
 
-pub struct ProjectDirectory(pub PathBuf, pub Directory);
+pub struct ProjectDirectory<'a>(pub PathBuf, pub Directory<'a>);
 
-impl ProjectDirectory {
+impl<'a> ProjectDirectory<'a> {
     pub fn build(self) -> std::io::Result<()> {
         // eprintln!("change this current dir to an immutable directory, use pointers!!!!");
 

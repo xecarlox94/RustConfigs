@@ -1,33 +1,34 @@
 use std::{fs::File, io::Write, path::PathBuf};
 
 #[derive(Debug)]
-pub enum DirFile {
-    Doc(Text), // WIP: Create interface to get content str from FileContent
-    Exec(Code), // WIP: content should be a pointer
+pub enum DirFile<'a> {
+    Doc(Text<'a>), // WIP: Create interface to get content str from FileContent
+    Exec(Code<'a>), // WIP: content should be a pointer
 }
 
-pub trait CreateFile {
-    fn create_file(&self, current_dir: PathBuf) -> std::io::Result<File>;
-}
-
-impl CreateFile for DirFile {
-    fn create_file(&self, current_dir: PathBuf) -> std::io::Result<File> {
+impl<'a> DirFile<'a> {
+    pub fn write_file(&self, current_dir: PathBuf) -> std::io::Result<File> {
         match self {
             DirFile::Doc(text_file) => text_file.create_file(current_dir),
-            DirFile::Exec(code_file) => code_file.create_file(current_dir),
+            DirFile::Exec(code_file) => code_file.create_file_and_set_permissions(current_dir),
         }
     }
 }
 
 #[derive(Debug)]
-pub struct Text(pub String, pub String);
+pub struct Text<'a> {
+    pub file_name: &'a str,
+    pub content: String
+}
 
 #[derive(Debug)]
-pub struct Code(pub Text);
+pub struct Code<'a> {
+    pub file: Text<'a>
+}
 
-impl CreateFile for Code {
-    fn create_file(&self, current_dir: PathBuf) -> std::io::Result<File> {
-        self.0.create_file(current_dir).and_then(|written_file| {
+impl<'a> Code<'a> {
+    fn create_file_and_set_permissions(&self, current_dir: PathBuf) -> std::io::Result<File> {
+        self.file.create_file(current_dir).and_then(|written_file| {
             written_file.metadata().map(|file_metata| {
                 use std::os::unix::fs::PermissionsExt as _;
 
@@ -43,9 +44,9 @@ impl CreateFile for Code {
     }
 }
 
-impl CreateFile for Text {
+impl<'a> Text<'a> {
     fn create_file(&self, current_dir: PathBuf) -> std::io::Result<File> {
-        let Text(ref file_name, ref content) = self;
+        let Text{ref file_name, ref content} = self;
 
         File::create({
             let mut file_dir = current_dir.clone();
