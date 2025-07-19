@@ -6,7 +6,7 @@ use std::{
 use super::file::DirFile;
 
 #[derive(Debug)]
-pub struct Directory<'a>(pub String, pub Box<[Blob<'a>]>);
+pub struct Directory<'a>(pub &'a str, pub Box<[Blob<'a>]>);
 
 impl<'a> Directory<'a> {
     fn create_directory(&self, curr_folder: PathBuf) -> std::io::Result<()> {

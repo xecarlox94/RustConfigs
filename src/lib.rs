@@ -2,7 +2,7 @@ use std::{io::Error, path::PathBuf};
 
 mod docker_environment;
 
-use crate::docker_environment::project_directory::{Directory, Blob, ProjectDirectory};
+use crate::docker_environment::project_directory::{Blob, Directory, ProjectDirectory};
 
 use docker_environment::{
     file::{Code, DirFile, Text},
@@ -81,8 +81,7 @@ impl<'d> DockerOptions {
         "$DOCKER_NAME" \
         \
         {}"#,
-            self.project_name,
-            x11_nvidia_str
+            self.project_name, x11_nvidia_str
         )
     }
 }
@@ -92,29 +91,31 @@ impl<'d> NewDockerProject<'d> {
         ProjectDirectory(
             curr_dir,
             Directory(
-                self.project_name.as_ref().into(),
+                self.project_name.as_ref(),
                 Box::new([
                     Blob::Branch(Directory(
-                        String::from("src"),
-                        Box::new([Blob::Leaf(DirFile::Exec(Code{
-                            file: Text{
+                        "src",
+                        Box::new([Blob::Leaf(DirFile::Exec(Code {
+                            file: Text {
                                 file_name: "hello.sh",
                                 content: String::from("echo \"Hello World\""),
                             },
                         }))]),
                     )),
-                    Blob::Leaf(DirFile::Exec(Code{ file: Text{
-                        file_name: "run.sh",
-                        content: self.docker_run_content.clone(),
-                    }})),
-                    Blob::Leaf(DirFile::Doc(Text{
+                    Blob::Leaf(DirFile::Exec(Code {
+                        file: Text {
+                            file_name: "run.sh",
+                            content: self.docker_run_content.clone(),
+                        },
+                    })),
+                    Blob::Leaf(DirFile::Doc(Text {
                         file_name: "Dockerfile",
                         content: self.dockerfile_content.clone(),
                     })),
                     Blob::Branch(Directory(
-                        String::from("shell_utils"),
+                        "shell_utils",
                         Box::new([
-                            Blob::Leaf(DirFile::Doc(Text{
+                            Blob::Leaf(DirFile::Doc(Text {
                                 file_name: "utils.sh",
                                 content: String::from(
                                     r#"
@@ -126,7 +127,7 @@ source ./shell_utils/run_docker.sh
                             })),
                             Blob::Leaf(self.get_build_docker_util_file()),
                             Blob::Leaf(self.get_run_docker_util_file()),
-                            Blob::Leaf(DirFile::Doc(Text{
+                            Blob::Leaf(DirFile::Doc(Text {
                                 file_name: "get_container_name.sh",
                                 content: String::from(
                                     r#"
@@ -165,7 +166,7 @@ source ./shell_utils/run_docker.sh
     }
 
     fn get_build_docker_util_file(&self) -> DirFile {
-        DirFile::Doc(Text{
+        DirFile::Doc(Text {
             file_name: "build_docker.sh",
             content: String::from(
                 r#"
@@ -203,7 +204,7 @@ build_docker_fn () {
     }
 
     fn get_run_docker_util_file(&self) -> DirFile {
-        DirFile::Doc(Text{
+        DirFile::Doc(Text {
             file_name: "run_docker.sh",
             content: String::from(
                 r#"
