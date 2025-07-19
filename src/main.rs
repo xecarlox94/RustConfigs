@@ -1,6 +1,6 @@
-use std::env;
+use std::{env, rc::Rc};
 
-use clap::{arg, command, Arg, ArgAction, Command};
+use clap::{arg, command, Arg, ArgAction};
 
 use rust_configs::DockerOptions;
 
@@ -42,20 +42,29 @@ fn main() -> std::io::Result<()> {
         matches.get_one::<String>("base_image"),
     ) {
         (Some(project), Some(base_image)) => {
+            let project_name = Rc::new(project.to_owned());
+            let docker_base_name = Rc::new(base_image.to_owned());
             let docker_options = DockerOptions {
-                project_name: project,
-                docker_base_name: base_image,
+                project_name,
+                docker_base_name,
                 x11_support: matches.get_flag("x11_support"),
                 nvidia_runtime: matches.get_flag("nvidia_support"),
                 is_debian_based: matches.get_flag("debian_support"),
             };
 
+            // WIP: move all values to references
+
             env::current_dir().and_then(|current_dir|
+                // FIX: Load base image asynchronously on docker
+
                 docker_options
                     .get_new_docker_project()
                     .bootstrap_docker_project(current_dir)
             )
 
+            // FIX: IMPLEMENT THESE FEATURES
+            //
+            //
             // eprintln!("ADD RC<STR> TO PROGRAM, INSTEAD OF COPY STRING (FOR IMMUTABLE CASES)");
             // eprintln!("ADD RC<[T]> TO PROGRAM, INSTEAD OF VECTOR COPYING (FOR IMMUTABLE CASES)");
             // eprintln!("wrapper for creating bash files with shebangs");

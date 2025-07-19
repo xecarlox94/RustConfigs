@@ -1,9 +1,9 @@
-use std::{fs::File, io::Write, os::unix::fs::PermissionsExt, path::PathBuf};
+use std::{fs::File, io::Write, path::PathBuf};
 
 #[derive(Debug)]
 pub enum DirFile {
-    Doc(Text),
-    Exec(Code),
+    Doc(Text), // WIP: Create interface to get content str from FileContent
+    Exec(Code), // WIP: content should be a pointer
 }
 
 pub trait CreateFile {
@@ -27,7 +27,7 @@ pub struct Code(pub Text);
 
 impl CreateFile for Code {
     fn create_file(&self, current_dir: PathBuf) -> std::io::Result<File> {
-        self.0.create_file(current_dir).and_then(|mut written_file| {
+        self.0.create_file(current_dir).and_then(|written_file| {
             written_file.metadata().map(|file_metata| {
                 use std::os::unix::fs::PermissionsExt as _;
 

@@ -11,8 +11,8 @@ use docker_environment::{
 
 pub use docker_environment::project::DockerOptions;
 
-impl<'d, 'dockerfile, 'prj_name, 'base_name> DockerOptions<'prj_name, 'base_name> {
-    pub fn get_new_docker_project(&'d self) -> NewDockerProject<'d, 'prj_name, 'base_name> {
+impl<'d> DockerOptions {
+    pub fn get_new_docker_project(&'d self) -> NewDockerProject<'d> {
         let DockerOptions {
             docker_base_name,
             project_name,
@@ -20,8 +20,8 @@ impl<'d, 'dockerfile, 'prj_name, 'base_name> DockerOptions<'prj_name, 'base_name
         } = self;
 
         NewDockerProject {
-            project_name,
-            docker_base_name,
+            project_name: project_name.clone(),
+            docker_base_name: docker_base_name.clone(),
             dockerfile_content: self.get_dockerfile(),
             docker_run_content: self.get_docker_build_and_runfile(),
             docker_options: self,
@@ -87,12 +87,12 @@ impl<'d, 'dockerfile, 'prj_name, 'base_name> DockerOptions<'prj_name, 'base_name
     }
 }
 
-impl<'d, 'prj_name, 'base_name> NewDockerProject<'d, 'prj_name, 'base_name> {
+impl<'d> NewDockerProject<'d> {
     pub fn bootstrap_docker_project(self, curr_dir: PathBuf) -> Result<(), Error> {
         ProjectDirectory(
             curr_dir,
             Directory(
-                String::from(self.project_name),
+                self.project_name.as_ref().into(),
                 Some(Box::new([
                     Blob::Branch(Directory(
                         String::from("src"),
@@ -151,6 +151,9 @@ source ./shell_utils/run_docker.sh
         )
         .build()
 
+        // FIX: RUN BASH SCRIPT AFTERWARDS
+        //
+        //
         // eprintln!("EXECUTE BASH SCRIPT TO GO INSIDE PRJ FOLDER AND RUN run.sh");
 
         // use std::process::Command,

@@ -1,6 +1,5 @@
 use std::{
     fs::{create_dir, exists, remove_dir_all},
-    io::Error,
     path::PathBuf,
 };
 
