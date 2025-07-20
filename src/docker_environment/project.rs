@@ -1,7 +1,6 @@
 use std::rc::Rc;
 
 
-
 pub struct NewDockerProject<'d> {
     pub project_name: Rc<String>,
     // TODO: add current execution directory

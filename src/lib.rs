@@ -1,4 +1,4 @@
-use std::{io::Error, path::PathBuf};
+use std::{borrow::Cow, io::Error, path::PathBuf};
 
 mod docker_environment;
 
@@ -90,34 +90,34 @@ impl<'d> NewDockerProject<'d> {
     pub fn bootstrap_docker_project(self, curr_dir: PathBuf) -> Result<(), Error> {
         ProjectDirectory(
             curr_dir,
-            Directory(
-                self.project_name.as_ref(),
-                Box::new([
-                    Blob::Branch(Directory(
-                        "src",
-                        Box::new([Blob::Leaf(DirFile::Exec(Code {
+            Directory {
+                directory_name: self.project_name.as_ref(),
+                contents: Box::new([
+                    Blob::Branch(Directory {
+                        directory_name: "src",
+                        contents: Box::new([Blob::Leaf(DirFile::Exec(Code {
                             file: Text {
                                 file_name: "hello.sh",
-                                content: String::from("echo \"Hello World\""),
+                                content: Cow::Borrowed("echo \"Hello World\""),
                             },
                         }))]),
-                    )),
-                    Blob::Leaf(DirFile::Exec(Code {
+                    }),
+                    Blob::Leaf(DirFile::Exec(Code { // FIX: order this for performance
                         file: Text {
                             file_name: "run.sh",
-                            content: self.docker_run_content.clone(),
+                            content: Cow::Owned(self.docker_run_content.clone()), // FIX: revise this clone
                         },
                     })),
-                    Blob::Leaf(DirFile::Doc(Text {
+                    Blob::Leaf(DirFile::Doc(Text { // FIX: order this for performance
                         file_name: "Dockerfile",
-                        content: self.dockerfile_content.clone(),
+                        content: Cow::Owned(self.dockerfile_content.clone()), // FIX: revise this clone
                     })),
-                    Blob::Branch(Directory(
-                        "shell_utils",
-                        Box::new([
+                    Blob::Branch(Directory {
+                        directory_name: "shell_utils",
+                        contents: Box::new([
                             Blob::Leaf(DirFile::Doc(Text {
                                 file_name: "utils.sh",
-                                content: String::from(
+                                content: Cow::Borrowed(
                                     r#"
 source ./shell_utils/get_container_name.sh
 source ./shell_utils/build_docker.sh
@@ -129,7 +129,7 @@ source ./shell_utils/run_docker.sh
                             Blob::Leaf(self.get_run_docker_util_file()),
                             Blob::Leaf(DirFile::Doc(Text {
                                 file_name: "get_container_name.sh",
-                                content: String::from(
+                                content: Cow::Borrowed(
                                     r#"
 
     generate_docker_name () {
@@ -146,9 +146,9 @@ source ./shell_utils/run_docker.sh
                                 ),
                             })),
                         ]),
-                    )),
+                    }),
                 ]),
-            ),
+            },
         )
         .build()
 
@@ -165,10 +165,10 @@ source ./shell_utils/run_docker.sh
         // .map(|_| ())
     }
 
-    fn get_build_docker_util_file(&self) -> DirFile {
+    fn get_build_docker_util_file(&self) -> DirFile<'_> { // FIX: need to correct this
         DirFile::Doc(Text {
             file_name: "build_docker.sh",
-            content: String::from(
+            content: Cow::Borrowed(
                 r#"
 
 build_docker_fn () {
@@ -203,10 +203,10 @@ build_docker_fn () {
         })
     }
 
-    fn get_run_docker_util_file(&self) -> DirFile {
+    fn get_run_docker_util_file(&self) -> DirFile<'_> { // FIX: need to correct this
         DirFile::Doc(Text {
             file_name: "run_docker.sh",
-            content: String::from(
+            content: Cow::Owned(String::from(
                 r#"
 
 run_docker_fn () {
@@ -320,7 +320,7 @@ $RUN_CMD \
 
 }
                 "#,
-            ),
+            )),
         })
     }
 }

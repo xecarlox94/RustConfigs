@@ -6,18 +6,24 @@ use std::{
 use super::file::DirFile;
 
 #[derive(Debug)]
-pub struct Directory<'a>(pub &'a str, pub Box<[Blob<'a>]>);
+pub struct Directory<'a>{
+    pub directory_name: &'a str,
+    pub contents: Box<[Blob<'a>]>
+}
 
 impl<'a> Directory<'a> {
     fn create_directory(&self, curr_folder: PathBuf) -> std::io::Result<()> {
-        let Directory(dir_name, maybe_box_dir_contents) = self;
+        let Directory {
+            directory_name,
+            contents
+        }= self;
 
         let mut new_dir = curr_folder.clone();
-        new_dir.push(dir_name);
+        new_dir.push(directory_name);
 
         create_dir(&new_dir).map_err(|e| e.to_string()); // FIX: handle this error
 
-        maybe_box_dir_contents
+        contents
             .iter()
             .map(|p_file| p_file.create_file_blob(new_dir.clone()))
             .filter_map(|v| match v {
@@ -29,10 +35,8 @@ impl<'a> Directory<'a> {
         Ok(())
     }
 
-    fn get_dirname_str(&self) -> String {
-        let Directory(dir_name, _) = self;
-
-        dir_name.to_string()
+    fn get_dirname_str(&self) -> &str {
+        &self.directory_name
     }
 }
 

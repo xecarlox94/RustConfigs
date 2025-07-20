@@ -1,4 +1,4 @@
-use std::{fs::File, io::Write, path::PathBuf};
+use std::{borrow::Cow, fs::File, io::Write, path::PathBuf};
 
 #[derive(Debug)]
 pub enum DirFile<'a> {
@@ -18,7 +18,7 @@ impl<'a> DirFile<'a> {
 #[derive(Debug)]
 pub struct Text<'a> {
     pub file_name: &'a str,
-    pub content: String
+    pub content: Cow<'a, str>
 }
 
 #[derive(Debug)]
@@ -36,7 +36,7 @@ impl<'a> Code<'a> {
 
                 perms.set_mode(0o755);
 
-                let v = written_file.set_permissions(perms);
+                let v = written_file.set_permissions(perms); // FIX: fix this
 
                 written_file
             })
