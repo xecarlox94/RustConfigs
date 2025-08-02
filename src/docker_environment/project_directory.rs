@@ -1,6 +1,5 @@
 use std::{
-    fs::{create_dir, exists, remove_dir_all},
-    path::PathBuf,
+    borrow::Cow, fs::{create_dir, exists, remove_dir_all}, path::PathBuf
 };
 
 use super::file::DirFile;
@@ -52,15 +51,21 @@ impl<'a> Blob<'a> {
     }
 }
 
-pub struct ProjectDirectory<'a>(pub PathBuf, pub Directory<'a>);
+pub struct ProjectDirectory<'a> {
+    pub path: Cow<PathBuf>,
+    pub dir: Directory<'a>
+}
 
 impl<'a> ProjectDirectory<'a> {
     pub fn build(self) -> std::io::Result<()> {
         // eprintln!("change this current dir to an immutable directory, use pointers!!!!");
 
-        let ProjectDirectory(current_path, directory) = self;
+        let ProjectDirectory {
+            path,
+            dir
+        } = self;
 
-        let mut dir_to_be_created = current_path.clone();
+        let mut dir_to_be_created = path.clone();
 
         dir_to_be_created.push(directory.get_dirname_str());
 
