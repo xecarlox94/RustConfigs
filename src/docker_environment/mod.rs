@@ -1,5 +1,4 @@
 
-mod directory;
 mod options;
 
 pub mod file;

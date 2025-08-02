@@ -26,10 +26,7 @@ impl<'a> Directory<'a> {
         contents
             .iter()
             .map(|p_file| p_file.create_file_blob(new_dir.clone()))
-            .filter_map(|v| match v {
-                Ok(_) => None,
-                Err(e) => Some(e), // FIX: fix error handling in this region
-            })
+            .filter_map(|v| v.err())
             .collect::<Vec<_>>();
 
         Ok(())
