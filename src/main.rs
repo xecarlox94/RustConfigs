@@ -1,9 +1,23 @@
-use std::{env, rc::Rc};
+use std::{env, mem::ManuallyDrop, rc::Rc};
 
 use clap::{arg, command, Arg, ArgAction};
 
-use rust_configs::DockerOptions;
+use rust_configs::{DockerOptions, DropWhenItsCold};
 
+
+#[tokio::main]
+async fn main() -> std::io::Result<()> {
+
+    let d  = DropWhenItsCold::new();
+
+    let mut x = ManuallyDrop::new(vec![1, 2, 3]);
+
+    x;
+
+    Ok(())
+}
+
+/*
 fn main() -> std::io::Result<()> {
     let matches = command!()
         .propagate_version(true)
@@ -73,3 +87,4 @@ fn main() -> std::io::Result<()> {
         _ => panic!("Please read the help manual :)"),
     }
 }
+*/

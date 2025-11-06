@@ -1,6 +1,12 @@
 use std::{io::Error, path::PathBuf};
 
+mod dwic;
+
+pub use dwic::DropWhenItsCold;
+
 mod docker_environment;
+
+
 
 use crate::docker_environment::project_directory::{Directory, Blob, ProjectDirectory};
 
